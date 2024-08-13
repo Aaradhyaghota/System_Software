@@ -1,0 +1,1 @@
+this file is created using cat command and got eddited from termial itself not by openig it and then writing to it .

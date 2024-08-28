@@ -12,17 +12,17 @@ int main(int argc, char** argv){
 
 	int fd = open(argv[1], O_RDWR | O_CREAT , 0644);
 	if(fd == -1){printf("Error");}
+
 	int i = lseek(fd, 0 , SEEK_END);
 	printf("lseek position before write : %d\n",i);
-	//if(i != 0){printf("Error");}
-	
+		
 	int sz1 = write(fd, "firstwrite",10);
 	int l = lseek(fd , 0 , SEEK_CUR);
 	printf("lseek position after first write : %d\n",l);
+
 	int j = lseek(fd , 10 , SEEK_CUR);
 	printf("lseek position after moving 10 byte forward : %d\n",j);
-	if(j != 10){printf("Error");}
-
+        
 	int sz2 = write(fd, "secondwrit",10);
 	int k = lseek(fd , 0 , SEEK_CUR);
 	printf("lseek position after Second write : %d\n",k);
@@ -30,4 +30,4 @@ int main(int argc, char** argv){
 	close(fd);
 	return 0;
 }
-
+// 10(b) use od -c filename in the terminal to find the spaces in the files , -c will give the asccii values of all the character in file.

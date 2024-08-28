@@ -32,7 +32,8 @@ int main (int argc, char** argv){
 		index++;
 
 	}
-
+	
+	//you have to close the file buffer so that progrma can terminate.
 	close(fd);
 	close(fd1);
          

@@ -1,0 +1,2 @@
+fcntl-writting using the older fd
+  fcntl-writting using the new fd

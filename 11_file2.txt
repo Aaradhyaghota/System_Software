@@ -1,0 +1,2 @@
+dup2-writting using the older fd
+  dup2-writting using the new fd

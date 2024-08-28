@@ -11,7 +11,9 @@ int main(){
 	if(size != -1){printf("%d byte was readed.\n", size);}
 	else {printf("--Error--\nInput failed\n");}
 
-	int size2 = write(1,buff,20);
+	// to avoid garbage while writting only read only how much you read
+	// give size to write functoin  
+	int size2 = write(1,buff,size);
 	if(size2 == -1)printf("writting failed\n");
 	//else printf("output not Printed\n");
 

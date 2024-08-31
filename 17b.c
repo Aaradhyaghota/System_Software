@@ -1,3 +1,13 @@
+/*
+========================================================================================================
+
+Question No: 17b
+Author: Aaradhya Ghota
+Description: Write a program to simulate online ticket reservation. Implement write lock Write a program to open a file, store a ticket number and exit. Write a separate program, to open the file, implement write lock, read the ticket number, increment the number and print the new ticket number then close the file.
+Date: 29th August, 2024
+
+========================================================================================================
+*/
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -15,7 +25,7 @@ int main() {
         lk.l_type = F_WRLCK;
         lk.l_whence = SEEK_SET;
         lk.l_start = 0;
-        lk.l_len = 0;
+        lk.l_len = 0;//length = 0 takes the full length of file
         lk.l_pid = getpid();
 
 	printf("Accuiring lock\n");
@@ -43,4 +53,81 @@ int main() {
 	printf("Updated ticket number %d \n",tk.ticket_value);
 
 }
+
+/*
+========================================================================================================
+Output:
+
+Terminal 1:
+./17upd_tk
+Accuiring lock
+Current ticket number : 10 
+Inside the critical section- Updating the ticket no. value 
+Enter to unlock
+
+Terminal 2:
+./17upd_tk 
+Accuiring lock
+
+Terminal3:
+./17upd_tk 
+Accuiring lock
+
+>>after 1st person exit
+
+Terminal 1:
+Accuiring lock
+Current ticket number : 10 
+Inside the critical section- Updating the ticket no. value 
+Enter to unlock
+
+Unlocked
+Updated ticket number 11 
+
+Terminal 2:
+./17upd_tk 
+Accuiring lock
+Current ticket number : 11 
+Inside the critical section- Updating the ticket no. value 
+Enter to unlock
+
+
+Terminal3:
+./17upd_tk 
+Accuiring lock
+
+
+>>after 2st person exit
+
+Terminal 1:
+Accuiring lock
+Current ticket number : 10 
+Inside the critical section- Updating the ticket no. value 
+Enter to unlock
+
+Unlocked
+Updated ticket number 11 
+
+Terminal 2:
+ ./17upd_tk 
+Accuiring lock
+Current ticket number : 11 
+Inside the critical section- Updating the ticket no. value 
+Enter to unlock
+
+Unlocked
+Updated ticket number 12 
+
+
+
+Terminal3:
+./17upd_tk 
+Accuiring lock
+Current ticket number : 12 
+Inside the critical section- Updating the ticket no. value 
+Enter to unlock
+
+========================================================================================================
+*/
+
 

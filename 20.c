@@ -1,3 +1,13 @@
+/*
+========================================================================================================
+
+Question No.: 20
+Author: Aaradhya Ghota
+Description: Find out the priority of your running program. Modify the priority with nice command.
+Date: 30th August, 2024
+
+========================================================================================================
+*/
 #include<stdio.h>
 #include <unistd.h>
 //#include <sys/time.h>
@@ -34,3 +44,15 @@ int main(){
  	printf("The new priority (nice value) of process id: %d after changing its priority is %d\n",pid ,new_priority);
     
 }
+
+/*
+========================================================================================================
+Output:
+
+./a.out
+The priority (nice value) of the running process id: 19691 is 0
+The new priority (nice value) of process id: 19691 after changing its priority is 5
+
+
+========================================================================================================
+*/

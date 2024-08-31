@@ -1,3 +1,14 @@
+/*
+========================================================================================================
+
+Question no.: 30
+Author: Aaradhya GHota
+Description: Write a program to run a script at a specific time using a Daemon process.
+Date: 30th August, 2024
+
+========================================================================================================
+*/
+
 #include<stdio.h>
 #include<unistd.h>
 #include<stdlib.h>
@@ -32,7 +43,7 @@ int main( int argc, char** argv ){
 			time( &start );
 		} while( difftime( end, start ) > 0 );
 
-		system("echo Specific time reached!!!\n");
+		system("echo Specific time reached.\n");
 	}
 	else{
 		printf("Parent process terminated\n");
@@ -43,3 +54,20 @@ int main( int argc, char** argv ){
 }
 
 // to check for demon process use ps -el | grep <pid of child> 
+
+
+/*
+========================================================================================================
+Output:
+
+./a.out 22 41 40
+Parent process terminated
+child pid : 22730
+
+---
+Specific time reached.
+
+
+
+========================================================================================================
+*/

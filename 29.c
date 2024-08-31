@@ -1,3 +1,14 @@
+/*
+========================================================================================================
+
+Question no.: 29
+Author: Aaradhya Ghota
+Description: Write a program to get scheduling policy and modify the scheduling policy (SCHED_FIFO, SCHED_RR).
+Date: 30th August, 2024
+
+========================================================================================================
+*/
+
 #include <stdio.h>
 #include <sched.h>
 #include <unistd.h>
@@ -61,3 +72,28 @@ int main(){
 
 //while runnig the ./a.out use sudo because you are doing some authorised work-->>sudo ./a.out
  
+*
+========================================================================================================
+Output:
+
+sudo ./a.out
+Current scheduling policy: SCHED_OTHER 
+To change scheduling policy select 
+1:SCHED_FIFO 
+2:SCHED_RR 
+3:SCHED_OTHER 
+2
+Current scheduling policy: SCHED_RR 
+
+sudo ./a.out
+Current scheduling policy: SCHED_OTHER 
+To change scheduling policy select 
+1:SCHED_FIFO 
+2:SCHED_RR 
+3:SCHED_OTHER 
+2
+Current scheduling policy: SCHED_RR 
+
+
+========================================================================================================
+*/

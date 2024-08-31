@@ -1,3 +1,24 @@
+/*
+========================================================================================================
+
+Question No: 9
+Author: Aaradhya Ghota
+Description: Write a program to print the following information about a given file.
+a. inode
+b. number of hard links
+c. uid
+d. gid
+e. size
+f. block size
+g. number of blocks
+h. time of last access
+i. time of last modification
+j. time of last change
+Date: 16th August, 2024
+
+========================================================================================================
+*/
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -33,3 +54,25 @@ int main(int argc, char *argv[]){
 	
 	return 0;
 }
+
+/*
+========================================================================================================
+./a.out 8.txt
+File: 8.txt
+Inode: 8131528
+Number of hard links: 1
+UID: 1000
+GID: 1000
+Size: 510 bytes
+Block size: 4096 bytes
+Number of blocks: 8
+Time of last access: Fri Aug 30 19:24:01 2024
+Time of last modification: Wed Aug 28 18:31:13 2024
+Time of last change: Fri Aug 30 19:23:21 2024
+
+
+
+========================================================================================================
+*/
+
+

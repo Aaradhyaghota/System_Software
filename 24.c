@@ -1,3 +1,13 @@
+/*
+========================================================================================================
+
+Question No.: 24
+Author: Aaradhya Ghota
+Description: Write a program to create an orphan process.
+Date: 29th August, 2024
+
+========================================================================================================
+*/
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -11,8 +21,23 @@ int main(){
 
 	}
 	else {
-		printf("Parent Process terminaed\n");
+		printf("Parent Process terminated\n");
 	}
 	return 0;
 
 }
+
+/*
+========================================================================================================
+Output:
+
+./a.out
+Parent Process terminated
+CHild Process : 20478 before being orphan has parent id: 20477 
+
+ater 20sec
+
+Child Process : 20478 after being orphan has parent id: 1381
+
+========================================================================================================
+*/

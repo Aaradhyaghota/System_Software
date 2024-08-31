@@ -1,3 +1,15 @@
+/*
+========================================================================================================
+
+Question No: 16b
+Author: Aaradhya Ghota
+Description: Write a program to perform mandatory locking.
+	a. Implement write lock
+	b. Implement read lock
+Date: 29th August, 2024
+
+========================================================================================================
+*/
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -12,8 +24,8 @@ int main() {
         lk.l_len = 0;
         lk.l_pid = getpid();
 
-	printf("Reader want to enter \n"); 
-        printf("Before entering into critical section\n");
+	
+        printf("Reader acquiring lock\n");
 
         fcntl(fd,F_SETLKW, &lk);
 
@@ -28,4 +40,34 @@ int main() {
         printf("Finished\n");
 
 }
+
+/*
+========================================================================================================
+Output:
+
+gcc -o 16reader 16b.c
+gcc -o 16writer 16a.c
+
+terminal 1:
+./16reader 
+Reader acquiring lock
+Reader - Inside the critical section
+Enter to unlock
+
+
+terminal 2:
+./16reader 
+Reader acquiring lock
+Reader - Inside the critical section
+Enter to unlock
+
+
+
+terminal 3:
+./16writer
+Acquiring Write lock
+
+
+========================================================================================================
+*/
 

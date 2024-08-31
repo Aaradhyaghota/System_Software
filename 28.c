@@ -1,3 +1,13 @@
+/*
+========================================================================================================
+
+Question No.: 28
+Author: Aaradhya GHota
+Description: Write a program to get maximum and minimum real time priority.
+Date: 30th August, 2024
+
+========================================================================================================
+*/
 #include <stdio.h>
 #include <sched.h>
 
@@ -34,3 +44,16 @@ int main() {
 
     	return 0;
 }
+
+/*
+========================================================================================================
+Output:
+
+./a.out
+SCHED_FIFO: Min Priority = 1, Max Priority = 99
+SCHED_RR: Min Priority = 1, Max Priority = 99
+SCHED_OTHER: Min Priority = 0, Max Priority = 0
+
+
+========================================================================================================
+*/

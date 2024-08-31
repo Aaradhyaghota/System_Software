@@ -1,3 +1,15 @@
+/*
+========================================================================================================
+
+Question No: 14
+Author: Aaradhya Ghota
+Description: Write a program to find the type of a file.
+	a. Input should be taken from command line.
+	b. program should be able to identify any type of a file.
+Date: 29th August, 2024
+
+========================================================================================================
+*/
 #include <stdio.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -44,3 +56,20 @@ int main(int argc, char** argv){
          }
 
 }
+
+/*
+========================================================================================================
+Output:
+
+./a.out 8.txt
+File : 8.txt  is a regular file
+
+./a.out linkto1a
+File : linkto1a  is a symlink
+
+./a.out 20priority 
+File : 20priority  is a regular file
+
+
+========================================================================================================
+*/

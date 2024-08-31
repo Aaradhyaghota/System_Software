@@ -1,5 +1,16 @@
+/*
+========================================================================================================
+
+Question No: 12
+Author: Aaradhya Ghota
+Description Write a program to find out the opening mode of a file. Use fcntl. 
+Date: 28th August, 2024
+
+========================================================================================================
+*/
 #include <stdio.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 int main (int argc, char ** argv){
 	if(argc !=2){
@@ -22,4 +33,17 @@ int main (int argc, char ** argv){
             printf("The file is opened in read-write mode.\n");
     	else
             printf("Unknown file mode.\n");    
+          
+        close(fd);
 }
+
+/*
+========================================================================================================
+Output:
+
+./a.out 8.txt
+The file is opened in read-write mode.
+
+
+========================================================================================================
+*/

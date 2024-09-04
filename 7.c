@@ -20,7 +20,7 @@ int main (int argc, char** argv){
 		printf("Error- Enter valid Input");
 	}
 
-	int fd = open(argv[1],O_RDWR, 0777);
+	int fd = open(argv[1],O_RDWR);
 	if(fd == -1)printf("Error in opening the file '%s' ", argv[1]);
 
 	int fd1 = open(argv[2],O_CREAT | O_RDWR , 0777);

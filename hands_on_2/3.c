@@ -1,3 +1,12 @@
+/*
+========================================================================================================
+Name : 3
+Author : Prajyot Shende
+Description : Write a program to set (any one) system resource limit. Use setrlimit system call.
+Date: 12 Sept, 2024.
+========================================================================================================
+*/
+
 #include <stdio.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -39,3 +48,16 @@ int main(){
     	return 0;
 }
 
+
+/*
+========================================================================================================
+Output:
+./a.out
+Current soft limit for open files: 1024
+Current hard limit for open files: 1048576
+Successfully set new limits.
+New soft limit for open files: 2048
+New hard limit for open files: 4096
+
+========================================================================================================
+*/

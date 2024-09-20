@@ -15,15 +15,14 @@ Date: 14 Sept, 2024.
 #include <sys/stat.h>
 
 int main() {
-     char *fifo_name = "fifoByMknod";
+     char *path = "./fifoByMknod";
 
     
-    if (mknod(fifo_name, S_IFIFO | 0666, 0) == -1) {
-        printf("Error in creating fifo by mknod system call");
-        exit(1);
+    if (mknod(path, S_IFIFO | 0666, 0) == -1) {
+        perror("mknod");
     }
-
-    printf("FIFO '%s' created using mknod.\n", fifo_name);
+    else
+        printf("FIFO '%s' created using mknod.\n", path);
     return 0;
 }
 

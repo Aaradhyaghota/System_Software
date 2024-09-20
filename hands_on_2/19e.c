@@ -17,8 +17,7 @@ int main() {
         char *fifo_name = "fifoByMkfifo";
 
         if(mkfifo(fifo_name, 0777) == -1) {
-                printf("Error in creating the fifo by mkfifo ");
-                exit(1);
+                perror("mkfifo");      
         }
 
         printf("FIFO '%s' created using mkfifo.\n", fifo_name);

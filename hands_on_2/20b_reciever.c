@@ -13,24 +13,27 @@ Date: 14 Sept, 2024.
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
+
 
 int main(){
-        char arr[10];
-        
-        int fd = open("20fifo",O_RDONLY);
-        if (fd == -1) {
-                printf("Error in opening the fifo\n");
-                exit(1);
-        } 
-        
-        int n = read(fd, arr , 10);
-        if (n == -1){
-                printf("Error in reading from fifo");
-                exit(1);
+        char arr[100];
+        while(1){
+                int fd = open("20fifo",O_RDONLY);
+                if (fd == -1) {
+                        printf("Error in opening the fifo\n");
+                        exit(1);
+                } 
+                
+                char buf;
+                int i=0;
+                while (read(fd, &arr[i], 1) > 0){i++;}
+               
+                close(fd);
+                
+                printf("Message recieved : %s \n",arr);
+                memset(arr, '\0', sizeof(arr));
         }
-        close(fd);
-        
-        printf("Message recieved : %s \n",arr);
         return 0;
 
 }
@@ -41,7 +44,12 @@ int main(){
 Output:
 
 ./a.out
-Message recieved : Aaradhya 
+Message recieved : Hello myself aaradhya ghota
+ 
+Message recieved : How are you?
+ 
+
+
 
 ========================================================================================================
 */

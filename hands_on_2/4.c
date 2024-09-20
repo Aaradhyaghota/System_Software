@@ -1,3 +1,13 @@
+/*
+========================================================================================================
+Name : 4
+Author : Aaradhya GHota
+Description : Write a program to measure how much time is taken to execute 100 getppid() system call. Use time stamp counter.
+Date: 12 Sept, 2024.
+========================================================================================================
+*/
+
+
 #include <stdio.h>
 #include <unistd.h>  // for getppid()
 #include <stdint.h>  // for uint64_t
@@ -27,3 +37,12 @@ int main() {
     return 0;
 }
 
+/*
+========================================================================================================
+Output:
+
+./a.out
+The time taken by 100 getppid() function to execute is :  71670 nano second
+
+========================================================================================================
+*/

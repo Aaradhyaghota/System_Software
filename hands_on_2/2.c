@@ -1,3 +1,12 @@
+/*
+========================================================================================================
+Name : 2
+Author : Aaradhya Ghota
+Description : Write a program to print the system resource limits. Use getrlimit system call.
+Date: 12 Sept, 2024.
+========================================================================================================
+*/
+
 #include <stdio.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -63,3 +72,42 @@ int main(){
     	return 0;
 }
 
+
+
+/*
+========================================================================================================
+Output:
+
+./a.out
+System Resource Limits:
+
+RLIMIT_CPU (CPU time in seconds)
+  Current limit: infinite
+  Maximum limit: infinite
+RLIMIT_FSIZE (Maximum file size)
+  Current limit: infinite
+  Maximum limit: infinite
+RLIMIT_DATA (Maximum data segment size)
+  Current limit: infinite
+  Maximum limit: infinite
+RLIMIT_STACK (Maximum stack size)
+  Current limit: 8388608
+  Maximum limit: infinite
+RLIMIT_CORE (Maximum core file size)
+  Current limit: 0
+  Maximum limit: infinite
+RLIMIT_RSS (Maximum resident set size)
+  Current limit: infinite
+  Maximum limit: infinite
+RLIMIT_NOFILE (Maximum number of open file descriptors)
+  Current limit: 1024
+  Maximum limit: 1048576
+RLIMIT_NPROC (Maximum number of processes)
+  Current limit: 23022
+  Maximum limit: 23022
+RLIMIT_AS (Address space limit)
+  Current limit: infinite
+  Maximum limit: infinite
+
+========================================================================================================
+*/

@@ -1,7 +1,7 @@
 /*
 ========================================================================================================
 Name : 3
-Author : Prajyot Shende
+Author : Aaradhya Ghota
 Description : Write a program to set (any one) system resource limit. Use setrlimit system call.
 Date: 12 Sept, 2024.
 ========================================================================================================

@@ -1,7 +1,7 @@
 /*
 ========================================================================================================
 Name : 21
-Author : Prajyot Shende
+Author : Aaradhya Ghota
 Description : Write two programs so that both can communicate by FIFO - Use two way communications.
 Date: 12 Sept, 2024.
 ========================================================================================================

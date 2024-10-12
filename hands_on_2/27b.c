@@ -73,7 +73,7 @@ key        msqid      owner      perms      used-bytes   messages
 0x01068daa 1          aaradhya-g 666        100          1           
 
 ./a.out
-Key: 1068d52
+Key: 1068d52  
 Message Queue ID: 0
 msgrcv: No message of desired type
 

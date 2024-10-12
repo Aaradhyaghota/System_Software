@@ -1,6 +1,6 @@
 /*
 ========================================================================================================
-Name : 30.a
+Name : 30
 Author : Aaradhya Ghota
 Description : Write a program to create a shared memory.
 		a. Write some data to the shared memory

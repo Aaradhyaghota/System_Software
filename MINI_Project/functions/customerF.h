@@ -15,7 +15,9 @@
 
 #include "../record structures/customer.h"
 #include "../record structures/employee.h"
+#include "../record structures/feedback.h"
 #include "../record structures/transaction.h"
+#include "./commonF.h"
 #include "./server_constants.h"
 
 // Function Prototypes =================================
@@ -867,6 +869,10 @@ void get_transaction_detail(int connFD) {
     show_transaction(connFD, t_ID, customer.id);
 }
 
+// void apply_loan(int connFD) {
+
+// }
+
 bool customer_operation(int connFD) {
     if (Clogin_handler(connFD)) {
         printf("Customer Logged in.\n");
@@ -932,13 +938,13 @@ bool customer_operation(int connFD) {
                     transfer_funds(connFD);
                     break;
                 case 5:
-                    // apply_for_loan(connFD);
+                    // apply_loan(connFD);
                     break;
                 case 6:
                     change_password(connFD);
                     break;
                 case 7:
-                    // add_feedback(connFD);
+                    add_feedback(connFD);
                     break;
                 case 8:
                     get_transaction_detail(connFD);
@@ -964,6 +970,6 @@ bool customer_operation(int connFD) {
 //  Rish-1 -> defaultPassword
 //  Saloni-2 ->defaultPassword
 
-// to delete semaphore--> ipcs -s {write is semid here}
+// to delete semaphore--> ipcs -s {write semid here}
 
 // we have to add lock for previous transaction.and while wrtting the new transaction

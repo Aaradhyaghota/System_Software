@@ -51,12 +51,12 @@ void connection_handler(int connFd) {
                     // Bank Employee
                     printf("Employee trying to login!\n");
                     printf("emplyoee\n");
-                    employee_operation(connFd);
+                    emp_mag_operation(connFd, 0);
                     break;
                 case 3:
                     // Manager
                     printf("manager\n");
-                    // manager_operation(connFd);
+                    emp_mag_operation(connFd, 1);
                     break;
                 case 4:
                     // Administrator

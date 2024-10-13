@@ -15,6 +15,7 @@
 
 #include "../record structures/customer.h"
 #include "../record structures/employee.h"
+#include "../record structures/feedback.h"
 #include "../record structures/transaction.h"
 #include "./server_constants.h"
 
@@ -124,6 +125,96 @@ void transaction_history(int connFD, int customer_id) {
     for (int i = 0; cust.transactions[i] != -1 && i < MAX_TRANSACTIONS; i++) {
         show_transaction(connFD, cust.transactions[i], customer_id);
     }
+}
+
+void add_feedback(int connFD) {
+    ssize_t readBytes, writeBytes;
+    char readBuffer[1000], writeBuffer[1000];
+    struct Feedback newFdbk, prevFdbk;
+
+    int feedbackFD = open(FEEDBACK_FILE, O_RDONLY);
+    if (feedbackFD == -1 && errno == ENOENT) {
+        // Feedback file was never created
+        newFdbk.id = 0;
+    } else if (feedbackFD == -1) {
+        perror("Error while opening feedback file");
+        return;
+    } else {
+        int offset = lseek(feedbackFD, -sizeof(struct Feedback), SEEK_END);
+        if (offset == -1) {
+            perror("Error seeking to last feedback record!");
+            return;
+        }
+
+        struct flock lock = {F_RDLCK, SEEK_SET, offset, sizeof(struct Feedback), getpid()};
+        int lockingStatus = fcntl(feedbackFD, F_SETLKW, &lock);
+        if (lockingStatus == -1) {
+            perror("Error obtaining read lock on feedback record!");
+            return;
+        }
+        // here while reading without lock will not effect or give any deadlock because id cannot be change once its created.
+        readBytes = read(feedbackFD, &prevFdbk, sizeof(struct Feedback));
+        if (readBytes == -1) {
+            perror("Error while reading feedback record from file!");
+            return;
+        }
+
+        lock.l_type = F_UNLCK;
+        fcntl(feedbackFD, F_SETLK, &lock);
+
+        close(feedbackFD);
+
+        newFdbk.id = prevFdbk.id + 1;
+    }
+    // intitializing all variable of feedback
+    newFdbk.reviewed = 0;
+
+    sprintf(writeBuffer, "%s", CUSTOMER_ADD_FEEDBACK);
+    writeBytes = write(connFD, writeBuffer, sizeof(writeBuffer));
+    if (writeBytes == -1) {
+        perror("Error writing CUSTOMER_ADD_FEEDBACK message to client!");
+        return;
+    }
+
+    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+    if (readBytes == -1) {
+        perror("Error reading  feedback response from client!");
+        return;
+    }
+    bzero(newFdbk.text, sizeof(newFdbk.text));
+    strcpy(newFdbk.text, readBuffer);
+
+    feedbackFD = open(FEEDBACK_FILE, O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
+    if (feedbackFD == -1) {
+        perror("Error while creating / opening customer file!");
+        return;
+    }
+    // seeking  to customer record in file
+    off_t offset = lseek(feedbackFD, newFdbk.id * sizeof(struct Feedback), SEEK_SET);
+    if (offset == -1) {
+        perror("Error while seeking to required employee record!");
+        return;
+    }
+
+    // Lock the record to be write
+    struct flock lock = {F_WRLCK, SEEK_SET, offset, sizeof(struct Feedback), getpid()};
+    int lockingStatus = fcntl(feedbackFD, F_SETLKW, &lock);
+    if (lockingStatus == -1) {
+        perror("Couldn't obtain lock on feedback record!");
+        return;
+    }
+    // writting to customer file
+    writeBytes = write(feedbackFD, &newFdbk, sizeof(newFdbk));
+    if (writeBytes == -1) {
+        perror("Error while writing feedback record to file!");
+        return;
+    }
+    // unlocking
+    lock.l_type = F_UNLCK;
+    fcntl(feedbackFD, F_SETLKW, &lock);
+
+    close(feedbackFD);
+    return;
 }
 
 #endif

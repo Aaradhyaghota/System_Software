@@ -763,7 +763,7 @@ void manage_role(int connFD) {
     bzero(readBuffer, sizeof(readBuffer));
     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
     if (readBytes == -1) {
-        perror("Error while reading customer ID from client!");
+        perror("Error while reading employee ID from client!");
         return;
     }
     // opening the file
@@ -776,7 +776,7 @@ void manage_role(int connFD) {
     int employeeID = atoi(readBuffer);
     off_t offset = lseek(employeeFileDescriptor, employeeID * sizeof(struct Employee), SEEK_SET);
     if (errno == EINVAL) {
-        // Customer record doesn't exist
+        // employee record doesn't exist
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, EMPLOYEE_ID_DOESNT_EXIT);
         strcat(writeBuffer, "^");
@@ -822,7 +822,7 @@ void manage_role(int connFD) {
     bzero(readBuffer, sizeof(readBuffer));
     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
     if (readBytes == -1) {
-        perror("Error while reading customer ID from client!");
+        perror("Error while reading role from client!");
         return;
     }
 
@@ -838,9 +838,9 @@ void manage_role(int connFD) {
         return;
     }
 
-    employeeFileDescriptor = open(CUSTOMER_FILE, O_WRONLY);
+    employeeFileDescriptor = open(EMPLOYEE_FILE, O_WRONLY);
     if (employeeFileDescriptor == -1) {
-        perror("Error while opening customer file");
+        perror("Error while opening employeee file");
         return;
     }
     offset = lseek(employeeFileDescriptor, employeeID * sizeof(struct Employee), SEEK_SET);
@@ -860,7 +860,7 @@ void manage_role(int connFD) {
     // writting the employee structure
     writeBytes = write(employeeFileDescriptor, &newEmployee, sizeof(struct Employee));
     if (writeBytes == -1) {
-        perror("Error while writing update customer info into file");
+        perror("Error while writing update employee info into file");
         return;
     }
     // unlocking

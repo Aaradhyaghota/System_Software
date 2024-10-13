@@ -14,13 +14,13 @@
 #include "../record structures/customer.h"
 #include "../record structures/employee.h"
 #include "../record structures/transaction.h"
+#include "./managerF.h"
 #include "./server_constants.h"
 
 // Function Prototypes =================================
 bool Elogin_handler(int connFD);
 void Eadd_new_customer(int connFD);
 bool Emodify_customer_details(int connFD);
-bool employee_operation(int connFD);
 // int add_customer(int connFD);
 // bool delete_account(int connFD);
 
@@ -171,7 +171,7 @@ void Eadd_new_customer(int connFD) {
     }
     // intitializing all variable of customer
     newCustomer.balance = 0;
-    newCustomer.active = true;
+    newCustomer.active = true;  // 1->active 0->deactive
     for (int i = 0; i < MAX_TRANSACTIONS; i++) {
         newCustomer.transactions[i] = -1;
     }
@@ -513,65 +513,97 @@ bool Emodify_customer_details(int connFD) {
     return true;
 }
 
-bool employee_operation(int connFD) {
-    if (Elogin_handler(connFD)) {
-        printf("Employee Logged in.\n");
-        ssize_t writeBytes, readBytes;             // Number of bytes read from / written to the client
-        char readBuffer[1000], writeBuffer[1000];  // A buffer used for reading
-                                                   // & writing to the client
-        bzero(writeBuffer, sizeof(writeBuffer));
-        strcpy(writeBuffer, EMPLOYEE_LOGIN_SUCCESS);
-        while (1) {
-            strcat(writeBuffer, "\n");
-            strcat(writeBuffer, EMPLOYEE_MENU);
-            writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
-            if (writeBytes == -1) {
-                perror("Error while writing ADMIN_MENU to client!");
-                return false;
-            }
-            bzero(writeBuffer, sizeof(writeBuffer));
+void get_passbook(int connFD) {
+    ssize_t writeBytes, readBytes;  // Number of bytes read from / written to the client
+    char readBuffer[1000], writeBuffer[1000];
+    char tempBuffer[1000];
 
-            readBytes = read(connFD, readBuffer, sizeof(readBuffer));
-            if (readBytes == -1) {
-                perror("Error while reading client's choice for ADMIN_MENU");
-                return false;
-            }
+    bzero(readBuffer, sizeof(readBuffer));
+    bzero(writeBuffer, sizeof(writeBuffer));
+    writeBytes = write(connFD, "Enter customer account no. whom passbook you want to see", strlen("Enter customer account no. whom passbook you want to see"));
+    if (writeBytes == -1) {
+        perror("Error writing  message to client!");
+        return;
+    }
+    bzero(readBuffer, sizeof(readBuffer));
+    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+    if (readBytes == -1) {
+        perror("Error reading customer account no. from the client!");
+        return;
+    }
+    int c_ID = atoi(readBuffer);
+    c_ID -= 1000;
+    transaction_history(connFD, c_ID);
+}
 
-            int choice = atoi(readBuffer);
-            switch (choice) {
-                case 1:
-                    Eadd_new_customer(connFD);
-                    break;
-                case 2:
-                    Emodify_customer_details(connFD);
-                    break;
-                case 3:
-                    // Process Loan Applications
-                    break;
-                case 4:
-                    // Approve/Reject Loans
-                    break;
-                case 5:
-                    // View Assigned Loan Applications
-                    break;
-                case 6:
-                    // get transation of a customer
-                    break;
-                case 7:
-                    // change password
-                    writeBytes = write(connFD, ADMIN_LOGOUT, strlen(ADMIN_LOGOUT));
-                    return false;
-                case 8:
-                    writeBytes = write(connFD, EMPLOYEE_LOGOUT, strlen(EMPLOYEE_LOGOUT));
-                    return false;
-                default:
-                    writeBytes = write(connFD, EMPLOYEE_EXIT, strlen(EMPLOYEE_EXIT));
-                    return false;
-            }
+bool employee_menu(int connFD) {
+    printf("Employee Logged in.\n");
+    ssize_t writeBytes, readBytes;             // Number of bytes read from / written to the client
+    char readBuffer[1000], writeBuffer[1000];  // A buffer used for reading
+                                               // & writing to the client
+    bzero(writeBuffer, sizeof(writeBuffer));
+    strcpy(writeBuffer, EMPLOYEE_LOGIN_SUCCESS);
+    while (1) {
+        strcat(writeBuffer, "\n");
+        strcat(writeBuffer, EMPLOYEE_MENU);
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1) {
+            perror("Error while writing EMPLOYEE_MENU to client!");
+            return false;
         }
-    } else {
-        // ADMIN LOGIN FAILED
-        return false;
+        bzero(writeBuffer, sizeof(writeBuffer));
+
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+        if (readBytes == -1) {
+            perror("Error while reading client's choice for EMPLOYEE_MENU");
+            return false;
+        }
+
+        int choice = atoi(readBuffer);
+        switch (choice) {
+            case 1:
+                Eadd_new_customer(connFD);
+                break;
+            case 2:
+                Emodify_customer_details(connFD);
+                break;
+            case 3:
+                // Process Loan Applications
+                break;
+            case 4:
+                // Approve/Reject Loans
+                break;
+            case 5:
+                // View Assigned Loan Applications
+                break;
+            case 6:
+                // get transation of a customer
+                get_passbook(connFD);
+                break;
+            case 7:
+                // change password
+                // change_password(connFD);
+                return false;
+            case 8:
+                writeBytes = write(connFD, EMPLOYEE_LOGOUT, strlen(EMPLOYEE_LOGOUT));
+                return false;
+            default:
+                writeBytes = write(connFD, EMPLOYEE_EXIT, strlen(EMPLOYEE_EXIT));
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool emp_mag_operation(int connFD, int num) {
+    if (Elogin_handler(connFD)) {
+        if (employee.role == 0 && num == 0)
+            employee_menu(connFD);
+        else if (employee.role == 1 && num == 1)
+            manager_menu(connFD);
+        else
+            write(connFD, "Wrong User!!$", strlen("Wrong User!!$"));
     }
     return true;
 }

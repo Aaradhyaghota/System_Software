@@ -1039,8 +1039,7 @@ bool admin_operation(int connFD) {
                     Achange_password(connFD);
                     break;
                 case 6:
-                    writeBytes =
-                        write(connFD, ADMIN_LOGOUT, strlen(ADMIN_LOGOUT));
+                    writeBytes = write(connFD, ADMIN_LOGOUT, strlen(ADMIN_LOGOUT));
                     return false;
                 default:
                     writeBytes = write(connFD, ADMIN_EXIT, strlen(ADMIN_EXIT));

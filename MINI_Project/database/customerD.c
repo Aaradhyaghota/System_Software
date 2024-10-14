@@ -25,10 +25,10 @@ void main() {
             break;
         }
         bzero(writeBuffer, sizeof(writeBuffer));
-        sprintf(writeBuffer, "%s%d \n%s%s \n%s%c \n%s%d \n%s%s \n%s%s \n%s%d \n%s%d \n", "customer Id- ",
+        sprintf(writeBuffer, "%s%d \n%s%s \n%s%c \n%s%d \n%s%s \n%s%s \n%s%d \n%s%d \n%s%d \n", "customer Id- ",
                 customer.id, "customer name - ", customer.name, "customer gendeer - ", customer.gender,
                 "customer age - ", customer.age, "customer login - ", customer.login, "customer password - ",
-                customer.password, "customer Active - ", customer.active, "customer balance - ", customer.balance);
+                customer.password, "customer Loan Status - ", customer.loan_status, "customer Active - ", customer.active, "customer balance - ", customer.balance);
         printf("%s", writeBuffer);
         for (int i = 0; i < 10; i++) {
             printf("%d ", customer.transactions[i]);

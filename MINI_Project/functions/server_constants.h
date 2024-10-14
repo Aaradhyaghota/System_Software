@@ -74,10 +74,11 @@
 // MANaGER MENU
 #define MANAGER_MENU                                      \
     "1. Activate/Deactivate Customer Accounts \n"         \
-    "2. Assign Loan Application Processes to Employees\n" \
-    "3. Review Customer Feedback\n"                       \
-    "4. Change Password\n"                                \
-    "5. Logout\n"                                         \
+    "2. View all the unassigned Loans\n"                  \
+    "3. Assign Loan Application Processes to Employees\n" \
+    "4. Review Customer Feedback\n"                       \
+    "5. Change Password\n"                                \
+    "6. Logout\n"                                         \
     "Press any other key to exit"
 
 // ====================================================
@@ -132,6 +133,7 @@
 #define CUSTOMER_LOGOUT "Logging you out now dear customer! Good bye!!$"
 #define CUSTOMER_EXIT "Customer Exitting !!$"
 
+#define CUSTOMER_ADD_LOAN "Enter the amount to apply for a loan : "
 #define CUSTOMER_ADD_FEEDBACK "Enter feedback : "
 // Customer MENU
 #define CUSTOMER_MENU                             \
@@ -191,5 +193,6 @@
 #define TRANSACTION_FILE "./records/transactions.txt"
 #define ADMIN_FILE "./records/admin.txt"
 #define FEEDBACK_FILE "./records/feedback.txt"
+#define LOAN_FILE "./records/loan.txt"
 
 #endif

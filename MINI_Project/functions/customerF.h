@@ -16,6 +16,7 @@
 #include "../record structures/customer.h"
 #include "../record structures/employee.h"
 #include "../record structures/feedback.h"
+#include "../record structures/loan.h"
 #include "../record structures/transaction.h"
 #include "./commonF.h"
 #include "./server_constants.h"
@@ -869,9 +870,144 @@ void get_transaction_detail(int connFD) {
     show_transaction(connFD, t_ID, customer.id);
 }
 
-// void apply_loan(int connFD) {
+void apply_loan(int connFD) {
+    ssize_t readBytes, writeBytes;
+    char readBuffer[1000], writeBuffer[1000];
+    if (customer.loan_status == 0 || customer.loan_status == 4) {
+        // customer can apply for loan when he haven't applied or his prev loan was rejected
+        struct Loan newloan, prevloan;
+        int loanFD = open(LOAN_FILE, O_RDONLY);
+        if (loanFD == -1 && errno == ENOENT) {
+            // Loan file was never created
+            newloan.id = 0;
+        } else if (loanFD == -1) {
+            perror("Error while opening Loan file");
+            return;
+        } else {
+            int offset = lseek(loanFD, -sizeof(struct Loan), SEEK_END);
+            if (offset == -1) {
+                perror("Error seeking to last Loan record!");
+                return;
+            }
 
-// }
+            struct flock lock = {F_RDLCK, SEEK_SET, offset, sizeof(struct Loan), getpid()};
+            int lockingStatus = fcntl(loanFD, F_SETLKW, &lock);
+            if (lockingStatus == -1) {
+                perror("Error obtaining read lock on Loan record!");
+                return;
+            }
+            // here while reading without lock will not effect or give any deadlock because id cannot be change once its created.
+            readBytes = read(loanFD, &prevloan, sizeof(struct Loan));
+            if (readBytes == -1) {
+                perror("Error while reading Customer record from file!");
+                return;
+            }
+
+            lock.l_type = F_UNLCK;
+            fcntl(loanFD, F_SETLK, &lock);
+
+            close(loanFD);
+
+            newloan.id = prevloan.id + 1;
+        }
+        newloan.customerID = customer.id;
+        newloan.status = 0;  // pending (manager)
+
+        writeBytes = write(connFD, CUSTOMER_ADD_LOAN, strlen(CUSTOMER_ADD_LOAN));
+        if (writeBytes == -1) {
+            perror("Error writing CUSTOMER_ADD_LOAN message to client!");
+            return;
+        }
+
+        bzero(readBuffer, sizeof(readBuffer));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+        if (readBytes == -1) {
+            perror("Error reading customer loan amount response from client!");
+            return;
+        }
+
+        int loan_amount = atoi(readBuffer);
+        newloan.amount = loan_amount;
+        // completer from here
+        loanFD = open(LOAN_FILE, O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
+        if (loanFD == -1) {
+            perror("Error while creating / opening loan file!");
+            return;
+        }
+        // seeking  to loan record in file
+        off_t offset = lseek(loanFD, newloan.id * sizeof(struct Loan), SEEK_SET);
+        if (offset == -1) {
+            perror("Error while seeking to required loan record!");
+            return;
+        }
+        // Lock the record to be write
+        struct flock lock = {F_WRLCK, SEEK_SET, offset, sizeof(struct Loan), getpid()};
+        int lockingStatus = fcntl(loanFD, F_SETLKW, &lock);
+        if (lockingStatus == -1) {
+            perror("Couldn't obtain lock on loan record!");
+            return;
+        }
+        // writting to customer file
+        writeBytes = write(loanFD, &newloan, sizeof(struct Loan));
+        if (writeBytes == -1) {
+            perror("Error while writing to loan record to file!");
+            return;
+        }
+        // unlocking
+        lock.l_type = F_UNLCK;
+        fcntl(loanFD, F_SETLKW, &lock);
+
+        close(loanFD);
+
+        // custoemr loan_status update
+        int customerFD = open(CUSTOMER_FILE, O_WRONLY, S_IRWXU);
+        if (customerFD == -1) {
+            perror("Error while creating / opening customer file!");
+            return;
+        }
+        // seeking  to customer record in file
+        offset = lseek(customerFD, customer.id * sizeof(struct Customer), SEEK_SET);
+        if (offset == -1) {
+            perror("Error while seeking to required customer record!");
+            return;
+        }
+        // write lock on customer record
+        lock.l_type = F_WRLCK;
+        lock.l_start = offset;
+        lockingStatus = fcntl(customerFD, F_SETLKW, &lock);
+        if (lockingStatus == -1) {
+            perror("Error while obtaining write lock on customer record!");
+            return;
+        }
+        customer.loan_status = 1;  // customer applied for loan
+        // writting to record
+        writeBytes = write(customerFD, &customer, sizeof(struct Customer));
+        if (writeBytes == -1) {
+            perror("Error while writing to customer record to file!");
+            return;
+        }
+        // unlocking
+        lock.l_type = F_UNLCK;
+        fcntl(loanFD, F_SETLKW, &lock);
+
+        close(customerFD);
+        // wrtting success mesage to client
+        writeBytes = write(connFD, "Applied for loan succesfully!^", strlen("Applied for loan succesfully!^"));
+        if (writeBytes == -1) {
+            perror("Error while writing Applied for loan succesfully message to client!");
+            return;
+        }
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
+
+    } else {
+        writeBytes = write(connFD, "You cannot apply for loan as you already one loan!^", strlen("You cannot apply for loan as you already one loan!^"));
+        if (writeBytes == -1) {
+            perror("Error while writing You cannot apply for loan as you already one loan message to client!");
+            return;
+        }
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
+    }
+}
 
 bool customer_operation(int connFD) {
     if (Clogin_handler(connFD)) {
@@ -938,7 +1074,7 @@ bool customer_operation(int connFD) {
                     transfer_funds(connFD);
                     break;
                 case 5:
-                    // apply_loan(connFD);
+                    apply_loan(connFD);
                     break;
                 case 6:
                     change_password(connFD);

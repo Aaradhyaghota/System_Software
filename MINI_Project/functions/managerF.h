@@ -152,6 +152,201 @@ void activate_deacticated(int connFD) {
     return;
 }
 
+void view_unassigned_loans(int connFD, int* flag) {
+    struct Loan loan;
+    char writeBuffer[1000], readBuffer[1000];
+    ssize_t writeBytes, readBytes;
+
+    int loanFD = open("./records/loan.txt", O_RDONLY, S_IRWXU);
+    if (loanFD == -1) {
+        perror("Error while opening the loan file");
+        return;
+    }
+    off_t offset = lseek(loanFD, 0, SEEK_SET);
+    while (EOF) {
+        int readBytes = read(loanFD, &loan, sizeof(struct Loan));
+        if (readBytes == 0) {
+            break;
+        }
+        if (loan.status == 0) {
+            *flag = 1;
+            bzero(writeBuffer, sizeof(writeBuffer));
+            sprintf(writeBuffer, "%s%d \n%s%d \n%s%d \n%s\n", "Loan Id- ", loan.id, "Customer Id- ", loan.customerID, "Loan amount - ", loan.amount, "----------------------");
+            strcat(writeBuffer, "^");
+            writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+            if (writeBytes == -1) {
+                perror("Error sending customer loginID and password to the client!");
+                return;
+            }
+
+            readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
+        }
+    }
+    close(loanFD);
+}
+
+void assign_loans_to_employee(int connFD) {
+    struct Loan loan;
+    char writeBuffer[1000], readBuffer[1000];
+    ssize_t writeBytes, readBytes;
+
+    int flag = 0;
+    view_unassigned_loans(connFD, &flag);
+    if (flag) {
+        bzero(writeBuffer, sizeof(writeBuffer));
+        writeBytes = write(connFD, "Enter the loan id you want to assign", strlen("Enter the loan id you want to assign"));
+        if (writeBytes == -1) {
+            perror("Error writing laon id asking message to client!");
+            return;
+        }
+
+        bzero(readBuffer, sizeof(readBuffer));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+        if (readBytes == -1) {
+            perror("Error reading loan id response from client!");
+            return;
+        }
+        int loan_id = atoi(readBuffer);
+
+        bzero(writeBuffer, sizeof(writeBuffer));
+        writeBytes = write(connFD, "Enter the Employee id you want to assign", strlen("Enter the employee id you want to assign"));
+        if (writeBytes == -1) {
+            perror("Error writing employee id asking message to client!");
+            return;
+        }
+
+        bzero(readBuffer, sizeof(readBuffer));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+        if (readBytes == -1) {
+            perror("Error reading employee id response from client!");
+            return;
+        }
+        int empID = atoi(readBuffer);
+
+        int loanFD = open("./records/loan.txt", O_RDWR, S_IRWXU);
+        if (loanFD == -1) {
+            perror("Error while opening the loan file");
+            return;
+        }
+
+        off_t offset = lseek(loanFD, loan_id * sizeof(struct Loan), SEEK_SET);
+        if (offset == -1) {
+            perror("Error while seeking to required Loan record!");
+            return;
+        }
+        struct flock lock = {F_RDLCK, SEEK_SET, offset, sizeof(struct Loan), getpid()};
+        int lockingStatus = fcntl(loanFD, F_SETLKW, &lock);
+        if (lockingStatus == -1) {
+            perror("Couldn't obtain read lock on loan record!");
+            return;
+        }
+        // read from loan file
+        readBytes = read(loanFD, &loan, sizeof(struct Loan));
+        if (readBytes == -1) {
+            perror("Error in reading form loan file");
+            return;
+        }
+        // changing loan status bit
+        loan.status = 1;  // assigned to an employee
+
+        offset = lseek(loanFD, loan_id * sizeof(struct Loan), SEEK_SET);
+        if (offset == -1) {
+            perror("Error while seeking to required loan record!");
+            return;
+        }
+        // Lock the record to be write
+        lock.l_type = F_WRLCK;
+        lock.l_start = offset;
+        lockingStatus = fcntl(loanFD, F_SETLKW, &lock);
+        if (lockingStatus == -1) {
+            perror("Couldn't obtain write lock on loan record!");
+            return;
+        }
+        // writting to loan file
+        writeBytes = write(loanFD, &loan, sizeof(struct Loan));
+        if (writeBytes == -1) {
+            perror("Error while writing loan record to file!");
+            return;
+        }
+        // unlocking
+        lock.l_type = F_UNLCK;
+        fcntl(loanFD, F_SETLKW, &lock);
+
+        close(loanFD);
+
+        // Customer---------------------------
+
+        int custID = loan.customerID;
+        struct Customer cust;
+        // custoemr loan_status update
+        int customerFD = open(CUSTOMER_FILE, O_RDWR, S_IRWXU);
+        if (customerFD == -1) {
+            perror("Error while creating / opening customer file!");
+            return;
+        }
+        // seeking  to customer record in file
+        offset = lseek(customerFD, custID * sizeof(struct Customer), SEEK_SET);
+        if (offset == -1) {
+            perror("Error while seeking to required customer record!");
+            return;
+        }
+        // read lock on customer record
+        lock.l_type = F_RDLCK;
+        lock.l_start = offset;
+        lockingStatus = fcntl(customerFD, F_SETLKW, &lock);
+        if (lockingStatus == -1) {
+            perror("Error while obtaining read lock on customer record!");
+            return;
+        }
+        // reading from customer file
+        readBytes = read(customerFD, &cust, sizeof(struct Customer));
+        if (readBytes == -1) {
+            perror("Error while reading Customer record from file!");
+            return;
+        }
+        cust.loan_status = 2;  // customer  loan assigned to employee
+        // seeking  to customer record in file
+        offset = lseek(customerFD, custID * sizeof(struct Customer), SEEK_SET);
+        if (offset == -1) {
+            perror("Error while seeking to required customer record!");
+            return;
+        }
+
+        // write lock on customer record
+        lock.l_type = F_WRLCK;
+        lock.l_start = offset;
+        lockingStatus = fcntl(customerFD, F_SETLKW, &lock);
+        if (lockingStatus == -1) {
+            perror("Error while obtaining write lock on customer record!");
+            return;
+        }
+
+        // writting to record
+        writeBytes = write(customerFD, &cust, sizeof(struct Customer));
+        if (writeBytes == -1) {
+            perror("Error while writing to customer record to file!");
+            return;
+        }
+        // unlocking
+        lock.l_type = F_UNLCK;
+        fcntl(loanFD, F_SETLKW, &lock);
+
+        close(customerFD);
+
+        // employee assignment
+
+    } else {
+        bzero(writeBuffer, sizeof(writeBuffer));
+        writeBytes = write(connFD, "No loan to assign to employee!^", strlen("No loan to assign to employee!^"));
+        if (writeBytes == -1) {
+            perror("Error writing no loan message  to client!");
+            return;
+        }
+        bzero(readBuffer, sizeof(readBuffer));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // dummy read
+    }
+}
+
 void review_feedback(int connFD) {
     struct Feedback feed;
     char writeBuffer[1000], readBuffer[1000];
@@ -284,16 +479,19 @@ bool manager_menu(int connFD) {
                 activate_deacticated(connFD);
                 break;
             case 2:
-                // Assign Loan Application Processes to Employees
+                view_unassigned_loans(connFD, 0);
                 break;
             case 3:
-                review_feedback(connFD);
+                // Assign Loan Application Processes to Employees
+                assign_loans_to_employee(connFD);
                 break;
             case 4:
-                // change password
-                // writeBytes = write(connFD, ADMIN_LOGOUT, strlen(ADMIN_LOGOUT));
-                return false;
+                review_feedback(connFD);
+                break;
             case 5:
+                // change password
+                break;
+            case 6:
                 writeBytes = write(connFD, MANAGER_LOGOUT, strlen(MANAGER_LOGOUT));
                 return false;
             default:

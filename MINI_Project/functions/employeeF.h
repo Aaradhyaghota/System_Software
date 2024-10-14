@@ -171,7 +171,8 @@ void Eadd_new_customer(int connFD) {
     }
     // intitializing all variable of customer
     newCustomer.balance = 0;
-    newCustomer.active = true;  // 1->active 0->deactive
+    newCustomer.active = true;    // 1->active 0->deactive
+    newCustomer.loan_status = 0;  // not applied for loan
     for (int i = 0; i < MAX_TRANSACTIONS; i++) {
         newCustomer.transactions[i] = -1;
     }
@@ -261,7 +262,7 @@ void Eadd_new_customer(int connFD) {
     // seeking  to customer record in file
     off_t offset = lseek(customerFileDescriptor, newCustomer.id * sizeof(struct Customer), SEEK_SET);
     if (offset == -1) {
-        perror("Error while seeking to required employee record!");
+        perror("Error while seeking to required customer record!");
         return;
     }
 

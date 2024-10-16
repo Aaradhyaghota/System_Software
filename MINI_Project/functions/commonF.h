@@ -66,7 +66,10 @@ void show_transaction(int connFD, int trans_id, int customer_id) {
         }
         if (trans.customer_id == customer_id) {
             bzero(writeBuffer, sizeof(writeBuffer));
-            sprintf(writeBuffer, "%s\n%s%d\n%s%d\n%s%d\n%s%s\n%s%d\n%s", "---------------Transaction Detail---------------", "Transaction id - ", trans.transactionID, "Customer account no. - ", trans.customer_id + 1000, "Old balance - ", trans.oldBalance, "Operation - ", operation, "New Balance - ", trans.newBalance, "----------------------------------------------------");
+            sprintf(writeBuffer, "%s\n%s%d\n%s%d\n%s%d\n%s%s\n%s%d\n%s", "---------------Transaction Detail---------------",
+                    "Transaction id - ", trans.transactionID, "Customer account no. - ", trans.customer_id + 1000,
+                    "Old balance - ", trans.oldBalance, "Operation - ", operation, "New Balance - ", trans.newBalance,
+                    "----------------------------------------------------");
 
             strcat(writeBuffer, "\n^");
 
@@ -83,6 +86,7 @@ void show_transaction(int connFD, int trans_id, int customer_id) {
     }
 }
 
+// custmeor and emp can see transation history
 void transaction_history(int connFD, int customer_id) {
     ssize_t writeBytes, readBytes;  // Number of bytes read from / written to the client
     char readBuffer[1000], writeBuffer[1000];
@@ -127,6 +131,7 @@ void transaction_history(int connFD, int customer_id) {
     }
 }
 
+// any body can add feedback
 void add_feedback(int connFD) {
     ssize_t readBytes, writeBytes;
     char readBuffer[1000], writeBuffer[1000];
@@ -214,6 +219,140 @@ void add_feedback(int connFD) {
     fcntl(feedbackFD, F_SETLKW, &lock);
 
     close(feedbackFD);
+    return;
+}
+
+// emp and manager password change
+void em_change_password(int connFD, int emp_id) {
+    ssize_t readBytes, writeBytes;
+    char readBuffer[1000], writeBuffer[1000], hashedPassword[1000];
+    char newPassword[1000];
+
+    struct Employee empl;
+    int empFD = open(EMPLOYEE_FILE, O_RDONLY);
+    if (empFD == -1) {
+        perror("Error opening employee file!");
+        return;
+    }
+
+    off_t offset = lseek(empFD, emp_id * sizeof(struct Employee), SEEK_SET);
+    if (offset == -1) {
+        perror("Error seeking to the cusemployee record!");
+        return;
+    }
+
+    struct flock lock = {F_RDLCK, SEEK_SET, offset, sizeof(struct Employee), getpid()};
+    int lockingStatus = fcntl(empFD, F_SETLKW, &lock);
+    if (lockingStatus == -1) {
+        perror("Error obtaining write lock on cusemployee record!");
+        return;
+    }
+
+    readBytes = read(empFD, &empl, sizeof(struct Employee));
+    if (readBytes == -1) {
+        perror("Error readding into employee struct!");
+        return;
+    }
+
+    lock.l_type = F_UNLCK;
+    lockingStatus = fcntl(empFD, F_SETLK, &lock);
+
+    close(empFD);
+
+    // enter old password
+    writeBytes = write(connFD, PASSWORD_CHANGE_OLD_PASS, strlen(PASSWORD_CHANGE_OLD_PASS));
+    if (writeBytes == -1) {
+        perror("Error writing PASSWORD_CHANGE_OLD_PASS message to client!");
+        return;
+    }
+    // read password
+    bzero(readBuffer, sizeof(readBuffer));
+    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+    if (readBytes == -1) {
+        perror("Error reading old password response from client");
+        return;
+    }
+    if (strcmp(crypt(readBuffer, SALT_BAE), empl.password) == 0) {
+        // Password matches with old password
+        writeBytes = write(connFD, PASSWORD_CHANGE_NEW_PASS, strlen(PASSWORD_CHANGE_NEW_PASS));
+        if (writeBytes == -1) {
+            perror("Error writing PASSWORD_CHANGE_NEW_PASS message to client!");
+            return;
+        }
+        // readin new password
+        bzero(readBuffer, sizeof(readBuffer));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+        if (readBytes == -1) {
+            perror("Error reading new password response from client");
+            return;
+        }
+
+        strcpy(newPassword, crypt(readBuffer, SALT_BAE));
+        // reenter new pass
+        writeBytes = write(connFD, PASSWORD_CHANGE_NEW_PASS_RE, strlen(PASSWORD_CHANGE_NEW_PASS_RE));
+        if (writeBytes == -1) {
+            perror("Error writing PASSWORD_CHANGE_NEW_PASS_RE message to client!");
+            return;
+        }
+        // reading new admin
+        bzero(readBuffer, sizeof(readBuffer));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+        if (readBytes == -1) {
+            perror("Error reading new password reenter response from client");
+            return;
+        }
+
+        if (strcmp(crypt(readBuffer, SALT_BAE), newPassword) == 0) {
+            // New & reentered passwords match
+            bzero(empl.password, sizeof(empl.password));
+            strcpy(empl.password, newPassword);
+
+            empFD = open(EMPLOYEE_FILE, O_WRONLY);
+            if (empFD == -1) {
+                perror("Error opening employee file!");
+                return;
+            }
+
+            offset = lseek(empFD, emp_id * sizeof(struct Employee), SEEK_SET);
+            if (offset == -1) {
+                perror("Error seeking to the employee record!");
+                return;
+            }
+
+            lock.l_type = F_WRLCK;
+            lock.l_start = offset;
+            int lockingStatus = fcntl(empFD, F_SETLKW, &lock);
+            if (lockingStatus == -1) {
+                perror("Error obtaining write lock on employee record!");
+                return;
+            }
+
+            writeBytes = write(empFD, &empl, sizeof(struct Employee));
+            if (writeBytes == -1) {
+                perror("Error storing updated employee password into employee record!");
+                return;
+            }
+
+            lock.l_type = F_UNLCK;
+            lockingStatus = fcntl(empFD, F_SETLK, &lock);
+
+            close(empFD);
+
+            writeBytes = write(connFD, PASSWORD_CHANGE_SUCCESS, strlen(PASSWORD_CHANGE_SUCCESS));
+            readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
+
+            return;
+        } else {
+            // New & reentered passwords don't match
+            writeBytes = write(connFD, PASSWORD_CHANGE_NEW_PASS_INVALID, strlen(PASSWORD_CHANGE_NEW_PASS_INVALID));
+            readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
+        }
+    } else {
+        // Password doesn't match with old password
+        writeBytes = write(connFD, PASSWORD_CHANGE_OLD_PASS_INVALID, strlen(PASSWORD_CHANGE_OLD_PASS_INVALID));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
+    }
+
     return;
 }
 

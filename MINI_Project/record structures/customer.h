@@ -2,6 +2,8 @@
 #define CUSTOMER_RECORD
 #define MAX_TRANSACTIONS 10
 
+#include <stdbool.h>
+
 struct Customer {
     int id;  // 0, 1, 2 ....
     char name[25];

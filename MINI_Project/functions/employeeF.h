@@ -95,6 +95,7 @@ bool Elogin_handler(int connFD) {
         close(employeeFileFD);
     } else {
         writeBytes = write(connFD, EMPLOYEE_LOGIN_ID_DOESNT_EXIT, strlen(EMPLOYEE_LOGIN_ID_DOESNT_EXIT));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
     }
 
     if (userFound) {
@@ -122,9 +123,11 @@ bool Elogin_handler(int connFD) {
 
         bzero(writeBuffer, sizeof(writeBuffer));
         writeBytes = write(connFD, INVALID_PASSWORD, strlen(INVALID_PASSWORD));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
     } else {
         bzero(writeBuffer, sizeof(writeBuffer));
         writeBytes = write(connFD, INVALID_LOGIN, strlen(INVALID_LOGIN));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
     }
 
     return false;
@@ -846,7 +849,7 @@ bool employee_menu(int connFD) {
             case 7:
                 writeBytes = write(connFD, EMPLOYEE_LOGOUT, strlen(EMPLOYEE_LOGOUT));
                 readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // dummy read
-                return false;
+                return true;
             default:
                 writeBytes = write(connFD, EMPLOYEE_EXIT, strlen(EMPLOYEE_EXIT));
                 return false;
@@ -857,15 +860,50 @@ bool employee_menu(int connFD) {
 }
 
 bool emp_mag_operation(int connFD, int num) {
+    bool flag;
     if (Elogin_handler(connFD)) {
-        if (employee.role == 0 && num == 0)
-            employee_menu(connFD);
-        else if (employee.role == 1 && num == 1)
-            manager_menu(connFD, employee.id);
-        else
+        // semaphore -----------------------
+        key_t semKey = ftok(EMPLOYEE_FILE, employee.id);  // Generate a key based on the employee number hence, different employee will have different semaphores
+
+        union semun {
+            int val;  // Value of the semaphore
+        } semSet;
+
+        int semctlStatus;
+        semIdentifier_c = semget(semKey, 1, 0);  // Get the semaphore if it exists
+        if (semIdentifier_c == -1) {
+            semIdentifier_c = semget(semKey, 1, IPC_CREAT | 0700);  // Create a new semaphore
+            if (semIdentifier_c == -1) {
+                perror("Error while creating semaphore!");
+                _exit(1);
+            }
+
+            semSet.val = 1;  // Set a binary semaphore
+            semctlStatus = semctl(semIdentifier_c, 0, SETVAL, semSet);
+            if (semctlStatus == -1) {
+                perror("Error while initializing a binary sempahore!");
+                _exit(1);
+            }
+        }
+        // Lock the critical section
+        struct sembuf semOp;
+        lock_critical_section(&semOp);
+        // menu
+        if (employee.role == 0 && num == 0) {
+            flag = employee_menu(connFD);
+            unlock_critical_section(&semOp);
+        } else if (employee.role == 1 && num == 1) {
+            flag = manager_menu(connFD, employee.id);
+            unlock_critical_section(&semOp);
+        } else {
+            unlock_critical_section(&semOp);
             write(connFD, "Wrong User!!$", strlen("Wrong User!!$"));
+            return false;
+        }
+        return flag;
+    } else {
+        return true;
     }
-    return true;
 }
 
 #endif

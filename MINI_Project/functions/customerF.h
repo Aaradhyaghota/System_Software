@@ -30,7 +30,6 @@ bool customer_operation(int connFD);
 // function definaation
 
 struct Customer customer;
-int semIdentifier_c;
 
 bool Clogin_handler(int connFD) {
     ssize_t readBytes, writeBytes;             // Number of bytes written to / read from the socket
@@ -95,6 +94,7 @@ bool Clogin_handler(int connFD) {
         close(customerFileFD);
     } else {
         writeBytes = write(connFD, CUSTOMER_LOGIN_ID_DOESNT_EXIT, strlen(CUSTOMER_LOGIN_ID_DOESNT_EXIT));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
     }
 
     if (userFound) {
@@ -122,9 +122,11 @@ bool Clogin_handler(int connFD) {
 
         bzero(writeBuffer, sizeof(writeBuffer));
         writeBytes = write(connFD, INVALID_PASSWORD, strlen(INVALID_PASSWORD));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
     } else {
         bzero(writeBuffer, sizeof(writeBuffer));
         writeBytes = write(connFD, INVALID_LOGIN, strlen(INVALID_LOGIN));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
     }
 
     return false;
@@ -208,28 +210,6 @@ void view_balance(int connFD) {
     return;
 }
 
-void lock_critical_section(struct sembuf* semOp) {
-    semOp->sem_op = -1;
-    semOp->sem_num = 0;
-    semOp->sem_flg = 0;
-    int semopStatus = semop(semIdentifier_c, semOp, 1);
-    if (semopStatus == -1) {
-        perror("Error while locking critical section");
-        return;
-    }
-    return;
-}
-
-void unlock_critical_section(struct sembuf* semOp) {
-    semOp->sem_op = 1;
-    int semopStatus = semop(semIdentifier_c, semOp, 1);
-    if (semopStatus == -1) {
-        perror("Error while operating on semaphore!");
-        _exit(1);
-    }
-    return;
-}
-
 int write_transaction_to_file(int customer_id, long int oldBalance, long int newBalance, int operation) {
     struct Transaction newTransaction;
     newTransaction.customer_id = customer_id;
@@ -283,9 +263,9 @@ void deposit_money(int connFD) {
     char readBuffer[1000], writeBuffer[1000];
 
     int depositAmount = 0;
-    // Lock the critical section
-    struct sembuf semOp;
-    lock_critical_section(&semOp);
+    // // Lock the critical section
+    // struct sembuf semOp;
+    // lock_critical_section(&semOp);
 
     int customerFileDescriptor = open(CUSTOMER_FILE, O_RDWR);
     if (customerFileDescriptor == -1) {
@@ -339,7 +319,7 @@ void deposit_money(int connFD) {
         writeBytes = write(connFD, DEPOSIT_AMOUNT, strlen(DEPOSIT_AMOUNT));
         if (writeBytes == -1) {
             perror("Error writing DEPOSIT_AMOUNT to client!");
-            unlock_critical_section(&semOp);
+            // unlock_critical_section(&semOp);
             lock.l_type = F_UNLCK;
             fcntl(customerFileDescriptor, F_SETLK, &lock);
             close(customerFileDescriptor);
@@ -350,7 +330,7 @@ void deposit_money(int connFD) {
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));
         if (readBytes == -1) {
             perror("Error reading deposit money from client!");
-            unlock_critical_section(&semOp);
+            // unlock_critical_section(&semOp);
             lock.l_type = F_UNLCK;
             fcntl(customerFileDescriptor, F_SETLK, &lock);
             close(customerFileDescriptor);
@@ -370,7 +350,7 @@ void deposit_money(int connFD) {
             writeBytes = write(customerFileDescriptor, &customer, sizeof(struct Customer));
             if (writeBytes == -1) {
                 perror("Error storing updated deposit money in account record!");
-                unlock_critical_section(&semOp);
+                // unlock_critical_section(&semOp);
                 lock.l_type = F_UNLCK;
                 fcntl(customerFileDescriptor, F_SETLK, &lock);
                 close(customerFileDescriptor);
@@ -394,7 +374,7 @@ void deposit_money(int connFD) {
 
     view_balance(connFD);
 
-    unlock_critical_section(&semOp);
+    // unlock_critical_section(&semOp);
 }
 
 void withdraw_money(int connFD) {
@@ -403,8 +383,8 @@ void withdraw_money(int connFD) {
 
     int withdrawAmount = 0;
     // Lock the critical section
-    struct sembuf semOp;
-    lock_critical_section(&semOp);
+    // struct sembuf semOp;
+    // lock_critical_section(&semOp);
 
     int customerFileDescriptor = open(CUSTOMER_FILE, O_RDWR);
     if (customerFileDescriptor == -1) {
@@ -457,7 +437,7 @@ void withdraw_money(int connFD) {
         writeBytes = write(connFD, WITHDRAW_AMOUNT, strlen(WITHDRAW_AMOUNT));
         if (writeBytes == -1) {
             perror("Error writing WITHDRAW_AMOUNT to client!");
-            unlock_critical_section(&semOp);
+            // unlock_critical_section(&semOp);
             lock.l_type = F_UNLCK;
             fcntl(customerFileDescriptor, F_SETLK, &lock);
             close(customerFileDescriptor);
@@ -468,7 +448,7 @@ void withdraw_money(int connFD) {
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));
         if (readBytes == -1) {
             perror("Error reading withdraw money from client!");
-            unlock_critical_section(&semOp);
+            // unlock_critical_section(&semOp);
             lock.l_type = F_UNLCK;
             fcntl(customerFileDescriptor, F_SETLK, &lock);
             close(customerFileDescriptor);
@@ -488,7 +468,7 @@ void withdraw_money(int connFD) {
             writeBytes = write(customerFileDescriptor, &customer, sizeof(struct Customer));
             if (writeBytes == -1) {
                 perror("Error storing updated withdraw money in account record!");
-                unlock_critical_section(&semOp);
+                // unlock_critical_section(&semOp);
                 lock.l_type = F_UNLCK;
                 fcntl(customerFileDescriptor, F_SETLK, &lock);
                 close(customerFileDescriptor);
@@ -512,7 +492,7 @@ void withdraw_money(int connFD) {
 
     view_balance(connFD);
 
-    unlock_critical_section(&semOp);
+    // unlock_critical_section(&semOp);
 }
 
 void transfer_funds(int connFD) {
@@ -521,8 +501,8 @@ void transfer_funds(int connFD) {
 
     int depositAmount = 0;
     // Lock the critical section
-    struct sembuf semOp;
-    lock_critical_section(&semOp);
+    // struct sembuf semOp;
+    // lock_critical_section(&semOp);
 
     int customerFileDescriptor = open(CUSTOMER_FILE, O_RDWR);
     if (customerFileDescriptor == -1) {
@@ -534,11 +514,11 @@ void transfer_funds(int connFD) {
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1) {
             perror("Error while writing ACCOUNT_ID_DOESNT_EXIT message to client!");
-            unlock_critical_section(&semOp);
+            // unlock_critical_section(&semOp);
             return;
         }
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));
-        unlock_critical_section(&semOp);  // Dummy read
+        // unlock_critical_section(&semOp);  // Dummy read
         return;
     }
     // go to current customer data
@@ -552,15 +532,15 @@ void transfer_funds(int connFD) {
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1) {
             perror("Error while writing ACCOUNT_ID_DOESNT_EXIT message to client!");
-            unlock_critical_section(&semOp);
+            // unlock_critical_section(&semOp);
             return;
         }
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
-        unlock_critical_section(&semOp);
+        // unlock_critical_section(&semOp);
         return;
     } else if (offset == -1) {
         perror("Error while seeking to required account record!");
-        unlock_critical_section(&semOp);
+        // unlock_critical_section(&semOp);
         return;
     }
     // asking for account no.
@@ -568,14 +548,14 @@ void transfer_funds(int connFD) {
     writeBytes = write(connFD, ACOUNT_TRANSFER, strlen(ACOUNT_TRANSFER));
     if (writeBytes == -1) {
         perror("Error while writing ACOUNT_TRANSFER message to client!");
-        unlock_critical_section(&semOp);
+        // unlock_critical_section(&semOp);
         return;
     }
     bzero(readBuffer, sizeof(readBuffer));
     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
     if (readBytes == -1) {
         perror("Error while reading message from client!");
-        unlock_critical_section(&semOp);
+        // unlock_critical_section(&semOp);
         return;
     }
 
@@ -584,7 +564,7 @@ void transfer_funds(int connFD) {
     int lockingStatus = fcntl(customerFileDescriptor, F_SETLKW, &lock);
     if (lockingStatus == -1) {
         perror("Error obtaining read lock on account record!");
-        unlock_critical_section(&semOp);
+        // unlock_critical_section(&semOp);
         return;
     }
 
@@ -603,19 +583,19 @@ void transfer_funds(int connFD) {
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1) {
             perror("Error while writing ACCOUNT_ID_DOESNT_EXIT message to client!");
-            unlock_critical_section(&semOp);
+            // unlock_critical_section(&semOp);
             lock.l_type = F_UNLCK;
             fcntl(customerFileDescriptor, F_SETLK, &lock);
             return;
         }
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
-        unlock_critical_section(&semOp);
+        // unlock_critical_section(&semOp);
         lock.l_type = F_UNLCK;
         fcntl(customerFileDescriptor, F_SETLK, &lock);
         return;
     } else if (offset == -1) {
         perror("Error while seeking to required account record!");
-        unlock_critical_section(&semOp);
+        // unlock_critical_section(&semOp);
         lock.l_type = F_UNLCK;
         fcntl(customerFileDescriptor, F_SETLK, &lock);
         return;
@@ -626,7 +606,7 @@ void transfer_funds(int connFD) {
     int lockingStatus2 = fcntl(customerFileDescriptor, F_SETLKW, &lock2);
     if (lockingStatus2 == -1) {
         perror("Error obtaining read lock on account record!");
-        unlock_critical_section(&semOp);
+        // unlock_critical_section(&semOp);
         lock.l_type = F_UNLCK;
         fcntl(customerFileDescriptor, F_SETLK, &lock);
         close(customerFileDescriptor);
@@ -636,7 +616,7 @@ void transfer_funds(int connFD) {
     readBytes = read(customerFileDescriptor, &customer2, sizeof(struct Customer));
     if (readBytes == -1) {
         perror("Error reading customer2 record from file!");
-        unlock_critical_section(&semOp);
+        // unlock_critical_section(&semOp);
         lock.l_type = F_UNLCK;
         fcntl(customerFileDescriptor, F_SETLK, &lock);
         lock2.l_type = F_UNLCK;
@@ -649,7 +629,7 @@ void transfer_funds(int connFD) {
     writeBytes = write(connFD, AMOUNT_TRANSFER, strlen(AMOUNT_TRANSFER));
     if (writeBytes == -1) {
         perror("Error while writing AMOUNT_TRANSFER message to client!");
-        unlock_critical_section(&semOp);
+        // unlock_critical_section(&semOp);
         lock.l_type = F_UNLCK;
         fcntl(customerFileDescriptor, F_SETLK, &lock);
         lock2.l_type = F_UNLCK;
@@ -661,7 +641,7 @@ void transfer_funds(int connFD) {
     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
     if (readBytes == -1) {
         perror("Error while reading message from client!");
-        unlock_critical_section(&semOp);
+        // unlock_critical_section(&semOp);
         lock.l_type = F_UNLCK;
         fcntl(customerFileDescriptor, F_SETLK, &lock);
         lock2.l_type = F_UNLCK;
@@ -687,7 +667,7 @@ void transfer_funds(int connFD) {
             writeBytes = write(customerFileDescriptor, &customer, sizeof(struct Customer));
             if (writeBytes == -1) {
                 perror("Error storing updated deposit money in account record!");
-                unlock_critical_section(&semOp);
+                // unlock_critical_section(&semOp);
                 lock.l_type = F_UNLCK;
                 fcntl(customerFileDescriptor, F_SETLK, &lock);
                 lock2.l_type = F_UNLCK;
@@ -700,7 +680,7 @@ void transfer_funds(int connFD) {
             writeBytes = write(customerFileDescriptor, &customer2, sizeof(struct Customer));
             if (writeBytes == -1) {
                 perror("Error storing updated deposit money in account record!");
-                unlock_critical_section(&semOp);
+                // unlock_critical_section(&semOp);
                 lock.l_type = F_UNLCK;
                 fcntl(customerFileDescriptor, F_SETLK, &lock);
                 lock2.l_type = F_UNLCK;
@@ -727,7 +707,7 @@ void transfer_funds(int connFD) {
 
     view_balance(connFD);
 
-    unlock_critical_section(&semOp);
+    // unlock_critical_section(&semOp);
 }
 
 void change_password(int connFD) {
@@ -737,13 +717,13 @@ void change_password(int connFD) {
     char newPassword[1000];
 
     // Lock the critical section
-    struct sembuf semOp;
-    lock_critical_section(&semOp);
+    // struct sembuf semOp;
+    // lock_critical_section(&semOp);
 
     writeBytes = write(connFD, PASSWORD_CHANGE_OLD_PASS, strlen(PASSWORD_CHANGE_OLD_PASS));
     if (writeBytes == -1) {
         perror("Error writing PASSWORD_CHANGE_OLD_PASS message to client!");
-        unlock_critical_section(&semOp);
+        // unlock_critical_section(&semOp);
         return;
     }
 
@@ -751,7 +731,7 @@ void change_password(int connFD) {
     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
     if (readBytes == -1) {
         perror("Error reading old password response from client");
-        unlock_critical_section(&semOp);
+        // unlock_critical_section(&semOp);
         return;
     }
 
@@ -760,14 +740,14 @@ void change_password(int connFD) {
         writeBytes = write(connFD, PASSWORD_CHANGE_NEW_PASS, strlen(PASSWORD_CHANGE_NEW_PASS));
         if (writeBytes == -1) {
             perror("Error writing PASSWORD_CHANGE_NEW_PASS message to client!");
-            unlock_critical_section(&semOp);
+            // unlock_critical_section(&semOp);
             return;
         }
         bzero(readBuffer, sizeof(readBuffer));
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));
         if (readBytes == -1) {
             perror("Error reading new password response from client");
-            unlock_critical_section(&semOp);
+            // unlock_critical_section(&semOp);
             return;
         }
 
@@ -776,14 +756,14 @@ void change_password(int connFD) {
         writeBytes = write(connFD, PASSWORD_CHANGE_NEW_PASS_RE, strlen(PASSWORD_CHANGE_NEW_PASS_RE));
         if (writeBytes == -1) {
             perror("Error writing PASSWORD_CHANGE_NEW_PASS_RE message to client!");
-            unlock_critical_section(&semOp);
+            // unlock_critical_section(&semOp);
             return;
         }
         bzero(readBuffer, sizeof(readBuffer));
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));
         if (readBytes == -1) {
             perror("Error reading new password reenter response from client");
-            unlock_critical_section(&semOp);
+            // unlock_critical_section(&semOp);
             return;
         }
 
@@ -795,14 +775,14 @@ void change_password(int connFD) {
             int customerFileDescriptor = open(CUSTOMER_FILE, O_WRONLY);
             if (customerFileDescriptor == -1) {
                 perror("Error opening customer file!");
-                unlock_critical_section(&semOp);
+                // unlock_critical_section(&semOp);
                 return;
             }
 
             off_t offset = lseek(customerFileDescriptor, customer.id * sizeof(struct Customer), SEEK_SET);
             if (offset == -1) {
                 perror("Error seeking to the customer record!");
-                unlock_critical_section(&semOp);
+                // unlock_critical_section(&semOp);
                 return;
             }
 
@@ -810,14 +790,14 @@ void change_password(int connFD) {
             int lockingStatus = fcntl(customerFileDescriptor, F_SETLKW, &lock);
             if (lockingStatus == -1) {
                 perror("Error obtaining write lock on customer record!");
-                unlock_critical_section(&semOp);
+                // unlock_critical_section(&semOp);
                 return;
             }
 
             writeBytes = write(customerFileDescriptor, &customer, sizeof(struct Customer));
             if (writeBytes == -1) {
                 perror("Error storing updated customer password into customer record!");
-                unlock_critical_section(&semOp);
+                // unlock_critical_section(&semOp);
                 return;
             }
 
@@ -829,7 +809,7 @@ void change_password(int connFD) {
             writeBytes = write(connFD, PASSWORD_CHANGE_SUCCESS, strlen(PASSWORD_CHANGE_SUCCESS));
             readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
 
-            unlock_critical_section(&semOp);
+            // unlock_critical_section(&semOp);
 
             return;
         } else {
@@ -843,7 +823,7 @@ void change_password(int connFD) {
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
     }
 
-    unlock_critical_section(&semOp);
+    // unlock_critical_section(&semOp);
 
     return;
 }
@@ -1011,8 +991,6 @@ void apply_loan(int connFD) {
 
 bool customer_operation(int connFD) {
     if (Clogin_handler(connFD)) {
-        printf("Customer Logged in.\n");
-
         ssize_t writeBytes, readBytes;  // Number of bytes read from / written to the client
         char readBuffer[1000], writeBuffer[1000];
 
@@ -1039,6 +1017,10 @@ bool customer_operation(int connFD) {
                 _exit(1);
             }
         }
+        // Lock the critical section
+        struct sembuf semOp;
+        lock_critical_section(&semOp);
+        printf("Customer Logged in.\n");
         // write to client success login
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, CUSTOMER_LOGIN_SUCCESS);
@@ -1091,12 +1073,16 @@ bool customer_operation(int connFD) {
                 case 10:
                     writeBytes = write(connFD, CUSTOMER_LOGOUT, strlen(CUSTOMER_LOGOUT));
                     readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // dummy read
-                    return false;
+                    unlock_critical_section(&semOp);
+                    return true;
                 default:
                     writeBytes = write(connFD, CUSTOMER_EXIT, strlen(CUSTOMER_EXIT));
+                    unlock_critical_section(&semOp);
                     return false;
             }
         }
+    } else {
+        return true;
     }
 }
 
@@ -1106,7 +1092,7 @@ bool customer_operation(int connFD) {
 //  Aman-0 -> 12345
 //  Rish-1 -> defaultPassword
 //  Saloni-2 ->defaultPassword
-
-// to delete semaphore--> ipcs -s {write semid here}
+// to see ipcs -s
+// to delete semaphore--> ipcrm -s {write semid here}
 
 // we have to add lock for previous transaction.and while wrtting the new transaction

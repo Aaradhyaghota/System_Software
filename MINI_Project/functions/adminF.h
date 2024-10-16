@@ -143,40 +143,6 @@ void add_new_employee(int connFD) {
 
     struct Employee newEmployee, previousEmployee;
 
-    int employeeFileDescriptor = open(EMPLOYEE_FILE, O_RDONLY);
-    if (employeeFileDescriptor == -1 && errno == ENOENT) {
-        // Employee file was never created
-        newEmployee.id = 0;
-    } else if (employeeFileDescriptor == -1) {
-        perror("Error while opening customer file");
-        return;
-    } else {
-        int offset = lseek(employeeFileDescriptor, -sizeof(struct Employee), SEEK_END);
-        if (offset == -1) {
-            perror("Error seeking to last Customer record!");
-            return;
-        }
-
-        struct flock lock = {F_RDLCK, SEEK_SET, offset, sizeof(struct Employee), getpid()};
-        int lockingStatus = fcntl(employeeFileDescriptor, F_SETLKW, &lock);
-        if (lockingStatus == -1) {
-            perror("Error obtaining read lock on Customer record!");
-            return;
-        }
-
-        readBytes = read(employeeFileDescriptor, &previousEmployee, sizeof(struct Employee));
-        if (readBytes == -1) {
-            perror("Error while reading Customer record from file!");
-            return;
-        }
-
-        lock.l_type = F_UNLCK;
-        fcntl(employeeFileDescriptor, F_SETLK, &lock);
-
-        close(employeeFileDescriptor);
-
-        newEmployee.id = previousEmployee.id + 1;
-    }
     // default assignment to variables
     for (int i = 0; i < MAX_LOANS; i++) {
         newEmployee.loan[i] = -1;
@@ -287,6 +253,42 @@ void add_new_employee(int connFD) {
     char hashedPassword[1000];
     strcpy(hashedPassword, crypt(AUTOGEN_PASSWORD, SALT_BAE));
     strcpy(newEmployee.password, hashedPassword);
+
+    // reading from file
+    int employeeFileDescriptor = open(EMPLOYEE_FILE, O_RDONLY);
+    if (employeeFileDescriptor == -1 && errno == ENOENT) {
+        // Employee file was never created
+        newEmployee.id = 0;
+    } else if (employeeFileDescriptor == -1) {
+        perror("Error while opening customer file");
+        return;
+    } else {
+        int offset = lseek(employeeFileDescriptor, -sizeof(struct Employee), SEEK_END);
+        if (offset == -1) {
+            perror("Error seeking to last Customer record!");
+            return;
+        }
+
+        struct flock lock = {F_RDLCK, SEEK_SET, offset, sizeof(struct Employee), getpid()};
+        int lockingStatus = fcntl(employeeFileDescriptor, F_SETLKW, &lock);
+        if (lockingStatus == -1) {
+            perror("Error obtaining read lock on Customer record!");
+            return;
+        }
+
+        readBytes = read(employeeFileDescriptor, &previousEmployee, sizeof(struct Employee));
+        if (readBytes == -1) {
+            perror("Error while reading Customer record from file!");
+            return;
+        }
+
+        lock.l_type = F_UNLCK;
+        fcntl(employeeFileDescriptor, F_SETLK, &lock);
+
+        close(employeeFileDescriptor);
+
+        newEmployee.id = previousEmployee.id + 1;
+    }
 
     // WRITTING TO FILE
     employeeFileDescriptor = open(EMPLOYEE_FILE, O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
@@ -1040,6 +1042,7 @@ bool admin_operation(int connFD) {
                     break;
                 case 6:
                     writeBytes = write(connFD, ADMIN_LOGOUT, strlen(ADMIN_LOGOUT));
+                    readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // dummy read
                     return false;
                 default:
                     writeBytes = write(connFD, ADMIN_EXIT, strlen(ADMIN_EXIT));

@@ -873,8 +873,8 @@ void get_transaction_detail(int connFD) {
 void apply_loan(int connFD) {
     ssize_t readBytes, writeBytes;
     char readBuffer[1000], writeBuffer[1000];
-    if (customer.loan_status == 0 || customer.loan_status == 4) {
-        // customer can apply for loan when he haven't applied or his prev loan was rejected
+    if (customer.loan_status == 0 || customer.loan_status == 4 || customer.loan_status == 3) {
+        // customer can apply for loan when he haven't applied or his prev loan was rejected or approved
         struct Loan newloan, prevloan;
         int loanFD = open(LOAN_FILE, O_RDONLY);
         if (loanFD == -1 && errno == ENOENT) {
@@ -1090,6 +1090,7 @@ bool customer_operation(int connFD) {
                     break;
                 case 10:
                     writeBytes = write(connFD, CUSTOMER_LOGOUT, strlen(CUSTOMER_LOGOUT));
+                    readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // dummy read
                     return false;
                 default:
                     writeBytes = write(connFD, CUSTOMER_EXIT, strlen(CUSTOMER_EXIT));

@@ -12,7 +12,7 @@
 #define ADMIN_LOGIN_WELCOME "Welcome dear admin! With great power comes great responsibility!\nEnter your credentials to unlock this power!"
 #define ADMIN_LOGIN_SUCCESS "----------------Welcome Admin-------------------"
 
-#define ADMIN_LOGOUT "Logging you out now admin! Good bye!!$"
+#define ADMIN_LOGOUT "Logging you out now admin! Good bye!^"
 #define ADMIN_EXIT "Admin exiting!$"
 
 // ERROR
@@ -66,7 +66,7 @@
 // LOGIN WELCOME
 #define MANAGER_LOGIN_WELCOME "Welcome dear manager! Enter your credentials to gain access to your account!"
 #define MANAGER_LOGIN_SUCCESS "-----------Welcome manager-------------------"
-#define MANAGER_LOGOUT "Logging you out now dear manager! Good bye!!$"
+#define MANAGER_LOGOUT "Logging you out now dear manager! Good bye!^"
 #define MANAGER_EXIT "Manager exiting!!$"
 #define MANAGER_ACTIVE_CUSTOMER "Enter the Id of the customer who's account status you want to change"
 #define MANAGER_ADD_CUSTOMER_WRONG_STATUS "Entered status of account is invalid !^"
@@ -88,7 +88,7 @@
 // LOGIN WELCOME
 #define EMPLOYEE_LOGIN_WELCOME "Welcome dear employee! Enter your credentials to gain access to your account!"
 #define EMPLOYEE_LOGIN_SUCCESS "-----------Welcome employee-------------------"
-#define EMPLOYEE_LOGOUT "Logging you out now dear employee! Good bye!!$"
+#define EMPLOYEE_LOGOUT "Logging you out now dear employee! Good bye!^"
 #define EMPLOYEE_EXIT "Employee exiting!!$"
 
 #define EMPLOYEE_ID_DOESNT_EXIT "No employee could be found for the given ID"
@@ -98,12 +98,11 @@
 #define EMPLOYEE_MENU                        \
     "1. Add new Customer \n"                 \
     "2. Modify Customer Details\n"           \
-    "3. Process Loan Applications\n"         \
-    "4. Appove / Reject Loan Applications\n" \
-    "5. View Assgined Loan Applications\n"   \
-    "6. Show passbook of customer\n"         \
-    "7. Change Password\n"                   \
-    "8. Logout\n"                            \
+    "3. Appove / Reject Loan Applications\n" \
+    "4. View Assgined Loan Applications\n"   \
+    "5. Show passbook of customer\n"         \
+    "6. Change Password\n"                   \
+    "7. Logout\n"                            \
     "Press any other key to exit"
 
 // EMPLOYEE ADD EMPLOYEE
@@ -130,7 +129,7 @@
     "account!"
 #define CUSTOMER_LOGIN_SUCCESS "Welcome beloved customer!"
 
-#define CUSTOMER_LOGOUT "Logging you out now dear customer! Good bye!!$"
+#define CUSTOMER_LOGOUT "Logging you out now dear customer! Good bye!^"
 #define CUSTOMER_EXIT "Customer Exitting !!$"
 
 #define CUSTOMER_ADD_LOAN "Enter the amount to apply for a loan : "

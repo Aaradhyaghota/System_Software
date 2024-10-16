@@ -19,56 +19,63 @@ void connection_handler(int connFd) {
     printf("Client is connected to the server!\n");
     char rBuffer[1000], wBuffer[1000];
     ssize_t rBytes, wBytes;
-
-    wBytes = write(
-        connFd,
-        "Welcome to bank!\nSelect user\n1. Customer\t2. Bank Employee\t3. "
-        "Manager\t4. Administrator\nPress any other number to exit\nEnter "
-        "the number corresponding to the choice!",
-        strlen(
-            "Welcome to bank!\nselect user\n1. Customer\t2. Bank Employee\t3. "
+    int ptr = 0;
+    while (1) {
+        wBytes = write(
+            connFd,
+            "Welcome to bank!\nSelect user\n1. Customer\t2. Bank Employee\t3. "
             "Manager\t4. Administrator\nPress any other number to exit\nEnter "
-            "the number corresponding to the choice!"));
+            "the number corresponding to the choice!",
+            strlen(
+                "Welcome to bank!\nselect user\n1. Customer\t2. Bank Employee\t3. "
+                "Manager\t4. Administrator\nPress any other number to exit\nEnter "
+                "the number corresponding to the choice!"));
 
-    if (wBytes == -1)
-        perror("Error while sending message to the user!");
-    else {
-        bzero(rBuffer, sizeof(rBuffer));
-        rBytes = read(connFd, rBuffer, sizeof(rBuffer));
-        if (rBytes == -1)
-            perror("Error while reading from client");
-        else if (rBytes == 0)
-            printf("No data was sent by the client");
+        if (wBytes == -1)
+            perror("Error while sending message to the user!");
         else {
-            int choice = atoi(rBuffer);
-            switch (choice) {
-                case 1:
-                    // Customer
-                    printf("customer\n");
-                    customer_operation(connFd);
+            bzero(rBuffer, sizeof(rBuffer));
+            rBytes = read(connFd, rBuffer, sizeof(rBuffer));
+            if (rBytes == -1)
+                perror("Error while reading from client");
+            else if (rBytes == 0)
+                printf("No data was sent by the client");
+            else {
+                int choice = atoi(rBuffer);
+                switch (choice) {
+                    case 1:
+                        // Customer
+                        printf("customer\n");
+                        customer_operation(connFd);
+                        break;
+                    case 2:
+                        // Bank Employee
+                        printf("Employee trying to login!\n");
+                        printf("emplyoee\n");
+                        emp_mag_operation(connFd, 0);
+                        break;
+                    case 3:
+                        // Manager
+                        printf("manager\n");
+                        emp_mag_operation(connFd, 1);
+                        break;
+                    case 4:
+                        // Administrator
+                        printf("Admin trying to login!\n");
+                        admin_operation(connFd);
+                        break;
+                    default:
+                        ptr++;
+                        break;
+                }
+                if (ptr) {
+                    wBytes = write(connFd, "!$", sizeof("!$"));
                     break;
-                case 2:
-                    // Bank Employee
-                    printf("Employee trying to login!\n");
-                    printf("emplyoee\n");
-                    emp_mag_operation(connFd, 0);
-                    break;
-                case 3:
-                    // Manager
-                    printf("manager\n");
-                    emp_mag_operation(connFd, 1);
-                    break;
-                case 4:
-                    // Administrator
-                    printf("Admin trying to login!\n");
-                    admin_operation(connFd);
-                    break;
-                default:
-                    // Exit
-                    break;
+                }
             }
         }
     }
+    // rBytes = read(connFd, rBuffer, sizeof(rBuffer));  // Dummy read
     printf("Terminating connection to client!\n");
 }
 

@@ -36,13 +36,10 @@ struct Admin admin;
 bool login_handler(int connFD) {
     ssize_t readBytes, writeBytes;             // Number of bytes written to / read from the socket
     char readBuffer[1000], writeBuffer[1000];  // Buffer for reading from / writing to the client
-    // char tempBuffer[1000];
-    // struct Customer customer;
     char tempBuffer[1000];
 
     bzero(readBuffer, sizeof(readBuffer));
     bzero(writeBuffer, sizeof(writeBuffer));
-    // int ID;
 
     strcpy(writeBuffer, ADMIN_LOGIN_WELCOME);
 
@@ -63,10 +60,6 @@ bool login_handler(int connFD) {
     }
 
     bool userFound = false;
-
-    // if (strcmp(readBuffer, ADMIN_LOGIN_ID) == 0) {
-    //     userFound = true;
-    // }
 
     // extracting customer id
     bzero(tempBuffer, sizeof(tempBuffer));
@@ -103,6 +96,7 @@ bool login_handler(int connFD) {
         close(adminFileFD);
     } else {
         writeBytes = write(connFD, ADMIN_LOGIN_ID_DOESNT_EXIT, strlen(ADMIN_LOGIN_ID_DOESNT_EXIT));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
     }
 
     if (userFound) {
@@ -129,9 +123,11 @@ bool login_handler(int connFD) {
 
         bzero(writeBuffer, sizeof(writeBuffer));
         writeBytes = write(connFD, INVALID_PASSWORD, strlen(INVALID_PASSWORD));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
     } else {
         bzero(writeBuffer, sizeof(writeBuffer));
         writeBytes = write(connFD, INVALID_LOGIN, strlen(INVALID_LOGIN));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
     }
 
     return false;
@@ -1043,7 +1039,7 @@ bool admin_operation(int connFD) {
                 case 6:
                     writeBytes = write(connFD, ADMIN_LOGOUT, strlen(ADMIN_LOGOUT));
                     readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // dummy read
-                    return false;
+                    return true;
                 default:
                     writeBytes = write(connFD, ADMIN_EXIT, strlen(ADMIN_EXIT));
                     return false;
@@ -1051,9 +1047,8 @@ bool admin_operation(int connFD) {
         }
     } else {
         // ADMIN LOGIN FAILED
-        return false;
+        return true;
     }
-    return true;
 }
 
 #endif

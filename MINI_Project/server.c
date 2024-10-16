@@ -42,27 +42,32 @@ void connection_handler(int connFd) {
                 printf("No data was sent by the client");
             else {
                 int choice = atoi(rBuffer);
+                bool flag;
                 switch (choice) {
                     case 1:
                         // Customer
                         printf("customer\n");
-                        customer_operation(connFd);
+                        flag = customer_operation(connFd);
+                        if (!flag) ptr++;
                         break;
                     case 2:
                         // Bank Employee
                         printf("Employee trying to login!\n");
                         printf("emplyoee\n");
-                        emp_mag_operation(connFd, 0);
+                        flag = emp_mag_operation(connFd, 0);
+                        if (!flag) ptr++;
                         break;
                     case 3:
                         // Manager
                         printf("manager\n");
-                        emp_mag_operation(connFd, 1);
+                        flag = emp_mag_operation(connFd, 1);
+                        if (!flag) ptr++;
                         break;
                     case 4:
                         // Administrator
                         printf("Admin trying to login!\n");
-                        admin_operation(connFd);
+                        flag = admin_operation(connFd);
+                        if (!flag) ptr++;
                         break;
                     default:
                         ptr++;
@@ -75,7 +80,6 @@ void connection_handler(int connFd) {
             }
         }
     }
-    // rBytes = read(connFd, rBuffer, sizeof(rBuffer));  // Dummy read
     printf("Terminating connection to client!\n");
 }
 

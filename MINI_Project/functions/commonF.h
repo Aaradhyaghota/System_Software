@@ -19,6 +19,30 @@
 #include "../record structures/transaction.h"
 #include "./server_constants.h"
 
+int semIdentifier_c;
+
+void lock_critical_section(struct sembuf* semOp) {
+    semOp->sem_op = -1;
+    semOp->sem_num = 0;
+    semOp->sem_flg = 0;
+    int semopStatus = semop(semIdentifier_c, semOp, 1);
+    if (semopStatus == -1) {
+        perror("Error while locking critical section");
+        return;
+    }
+    return;
+}
+
+void unlock_critical_section(struct sembuf* semOp) {
+    semOp->sem_op = 1;
+    int semopStatus = semop(semIdentifier_c, semOp, 1);
+    if (semopStatus == -1) {
+        perror("Error while operating on semaphore!");
+        _exit(1);
+    }
+    return;
+}
+
 void show_transaction(int connFD, int trans_id, int customer_id) {
     ssize_t readBytes, writeBytes;
     char readBuffer[1000], writeBuffer[1000];
@@ -78,11 +102,13 @@ void show_transaction(int connFD, int trans_id, int customer_id) {
 
         } else {
             writeBytes = write(connFD, TRANSACTION_NOT_ACCESSABLE, strlen(TRANSACTION_NOT_ACCESSABLE));
+            readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
         }
 
         close(transactionFileDescriptor);
     } else {
         writeBytes = write(connFD, TRANSACTION_ID_DOESNT_EXIT, strlen(TRANSACTION_ID_DOESNT_EXIT));
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
     }
 }
 

@@ -4,12 +4,12 @@
 // LOGIN
 #define LOGIN_ID "Enter your login ID"
 #define PASSWORD "Enter your password:"
-#define INVALID_LOGIN "The login ID specified doesn't exist!$"
-#define INVALID_PASSWORD "The password specified doesn't match!$"
+#define INVALID_LOGIN "The login ID specified doesn't exist!^"
+#define INVALID_PASSWORD "The password specified doesn't match!^"
 #define SALT_BAE "666"
 
 // LOGIN WELCOME
-#define ADMIN_LOGIN_WELCOME "Welcome dear admin! With great power comes great responsibility!\nEnter your credentials to unlock this power!"
+#define ADMIN_LOGIN_WELCOME "Welcome dear admin! \nEnter your credentials to unlock the bank!"
 #define ADMIN_LOGIN_SUCCESS "----------------Welcome Admin-------------------"
 
 #define ADMIN_LOGOUT "Logging you out now admin! Good bye!^"
@@ -17,12 +17,16 @@
 
 // ERROR
 #define ADMIN_ID_DOESNT_EXIT "No admin could be found for the given ID"
-#define ADMIN_LOGIN_ID_DOESNT_EXIT "No admin could be found for the given login ID$"
+#define ADMIN_LOGIN_ID_DOESNT_EXIT "No admin could be found for the given login ID!^"
 
 // ADMIN MENU
-#define ADMIN_MENU                                                             \
-    "1. Add New Bank Employee\n2. Modify Customer Details\n3. Modify Employee" \
-    "details\n4. Manage User Role\n5. Change Password\n6. Logout \n "          \
+#define ADMIN_MENU                 \
+    "1. Add New Bank Employee\n"   \
+    "2. Modify Customer Details\n" \
+    "3. Modify Employee details\n" \
+    "4. Manage User Role\n"        \
+    "5. Change Password\n"         \
+    "6. Logout \n"                 \
     "Press any other key to exit"
 
 // ERROR
@@ -81,8 +85,6 @@
     "6. Logout\n"                                         \
     "Press any other key to exit"
 
-// ====================================================
-
 // ========== EMPLOYEE SPECIFIC TEXT===================
 
 // LOGIN WELCOME
@@ -92,7 +94,7 @@
 #define EMPLOYEE_EXIT "Employee exiting!!$"
 
 #define EMPLOYEE_ID_DOESNT_EXIT "No employee could be found for the given ID"
-#define EMPLOYEE_LOGIN_ID_DOESNT_EXIT "No employee could be found for the given login ID$"
+#define EMPLOYEE_LOGIN_ID_DOESNT_EXIT "No employee could be found for the given login ID!^"
 
 // EMPLOYEE MENU
 #define EMPLOYEE_MENU                        \
@@ -119,14 +121,12 @@
 // ERROR
 #define INVALID_MENU_CHOICE "It seems you've made an invalid menu choice\nYou'll now be redirected to the main menu!^"
 #define CUSTOMER_ID_DOESNT_EXIT "No customer could be found for the given ID"
-#define CUSTOMER_LOGIN_ID_DOESNT_EXIT "No customer could be found for the given login ID$"
+#define CUSTOMER_LOGIN_ID_DOESNT_EXIT "No customer could be found for the given login ID!^"
 //
 
 // CUSTOMER
 
-#define CUSTOMER_LOGIN_WELCOME                                              \
-    "Welcome dear customer! Enter your credentials to gain access to your " \
-    "account!"
+#define CUSTOMER_LOGIN_WELCOME "Welcome dear customer! Enter your credentials to gain access to your account!"
 #define CUSTOMER_LOGIN_SUCCESS "Welcome beloved customer!"
 
 #define CUSTOMER_LOGOUT "Logging you out now dear customer! Good bye!^"
@@ -155,36 +155,27 @@
 
 #define DEPOSIT_AMOUNT "How much is it that you want to add into your bank?"
 #define DEPOSIT_AMOUNT_INVALID "You seem to have passed an invalid amount!^"
-#define DEPOSIT_AMOUNT_SUCCESS \
-    "The specified amount has been successfully added to your bank account!^"
+#define DEPOSIT_AMOUNT_SUCCESS "The specified amount has been successfully added to your bank account!^"
 
 #define TRANSFER_AMOUNT_INVALID "You seem to have passed an invalid amount or you dont have this much balance in your account!^ "
-#define TRANSFER_AMOUNT_SUCCESS \
-    "The specified amount has been successfully added to your bank account!^"
+#define TRANSFER_AMOUNT_SUCCESS "The specified amount has been successfully added to your bank account!^"
 
-#define WITHDRAW_AMOUNT \
-    "How much is it that you want to withdraw from your bank?"
-#define WITHDRAW_AMOUNT_INVALID                                           \
-    "You seem to have either passed an invalid amount or you don't have " \
-    "enough money in your bank to withdraw the specified amount^"
-#define WITHDRAW_AMOUNT_SUCCESS                                            \
-    "The specified amount has been successfully withdrawn from your bank " \
-    "account!^"
+#define WITHDRAW_AMOUNT "How much is it that you want to withdraw from your bank?"
+#define WITHDRAW_AMOUNT_INVALID "You seem to have either passed an invalid amount or you don't have enough money in your bank to withdraw the specified amount^"
+#define WITHDRAW_AMOUNT_SUCCESS "The specified amount has been successfully withdrawn from your bank account!^"
 
 #define AMOUNT_TRANSFER "Enter the amount you want to Transfer:"
 #define ACOUNT_TRANSFER "Enter account no. to which you want to transfer:"
 
 #define PASSWORD_CHANGE_OLD_PASS "Enter your old password"
-#define PASSWORD_CHANGE_OLD_PASS_INVALID \
-    "The entered password doesn't seem to match with the old password!^"
+#define PASSWORD_CHANGE_OLD_PASS_INVALID "The entered password doesn't seem to match with the old password!^"
 #define PASSWORD_CHANGE_NEW_PASS "Enter the new password"
 #define PASSWORD_CHANGE_NEW_PASS_RE "Reenter the new password"
-#define PASSWORD_CHANGE_NEW_PASS_INVALID \
-    "The new password and the reentered passwords don't seem to pass!^"
+#define PASSWORD_CHANGE_NEW_PASS_INVALID "The new password and the reentered passwords don't seem to pass!^"
 #define PASSWORD_CHANGE_SUCCESS "Password successfully changed!^"
 
-#define TRANSACTION_ID_DOESNT_EXIT "this Transaction id doesn't exist!$"
-#define TRANSACTION_NOT_ACCESSABLE "Trying to access wrong Transaction ID !$"
+#define TRANSACTION_ID_DOESNT_EXIT "this Transaction id doesn't exist!^"
+#define TRANSACTION_NOT_ACCESSABLE "Trying to access wrong Transaction ID !^"
 #define ENTER_TRANCTION_ID "Enter the Transaction Id which you want to see : "
 //
 #define CUSTOMER_FILE "./records/customer.txt"

@@ -595,7 +595,7 @@ bool manager_menu(int connFD, int emp_id) {
             case 6:
                 writeBytes = write(connFD, MANAGER_LOGOUT, strlen(MANAGER_LOGOUT));
                 readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // dummy read
-                return false;
+                return true;
             default:
                 writeBytes = write(connFD, MANAGER_EXIT, strlen(MANAGER_EXIT));
                 return false;

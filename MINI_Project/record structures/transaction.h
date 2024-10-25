@@ -6,7 +6,7 @@
 struct Transaction {
     int transactionID;  // 0, 1, 2, 3 ...
     int customer_id;
-    int operation;  // 0 -> Withdraw, 1 -> Deposit , 2->debit , 3-> credit
+    int operation;  // 0 -> Withdraw, 1 -> Deposit , 2->debit , 3-> credit ,4->loan credit
     int oldBalance;
     int newBalance;
     time_t transactionTime;

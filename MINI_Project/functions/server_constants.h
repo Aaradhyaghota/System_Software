@@ -13,7 +13,7 @@
 #define ADMIN_LOGIN_SUCCESS "----------------Welcome Admin-------------------"
 
 #define ADMIN_LOGOUT "Logging you out now admin! Good bye!^"
-#define ADMIN_EXIT "Admin exiting!$"
+#define ADMIN_EXIT "Admin exiting!!$"
 
 // ERROR
 #define ADMIN_ID_DOESNT_EXIT "No admin could be found for the given ID"
@@ -72,7 +72,7 @@
 #define MANAGER_LOGIN_SUCCESS "-----------Welcome manager-------------------"
 #define MANAGER_LOGOUT "Logging you out now dear manager! Good bye!^"
 #define MANAGER_EXIT "Manager exiting!!$"
-#define MANAGER_ACTIVE_CUSTOMER "Enter the Id of the customer who's account status you want to change"
+#define MANAGER_ACTIVE_CUSTOMER "Enter the account no. of the customer who's account status you want to change"
 #define MANAGER_ADD_CUSTOMER_WRONG_STATUS "Entered status of account is invalid !^"
 
 // MANaGER MENU

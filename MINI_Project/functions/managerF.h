@@ -508,7 +508,12 @@ void review_feedback(int connFD) {
             perror("Error while seeking to required feedback record!");
             return;
         }
-
+        struct flock lock = {F_RDLCK, SEEK_SET, offset, sizeof(struct Feedback), getpid()};
+        int lockingStatus = fcntl(feedbackFD, F_SETLKW, &lock);
+        if (lockingStatus == -1) {
+            perror("Couldn't obtain lock on feedback record!");
+            return;
+        }
         // changing reviewed bit
         readBytes = read(feedbackFD, &feed, sizeof(struct Feedback));
         if (readBytes == -1) {
@@ -517,16 +522,17 @@ void review_feedback(int connFD) {
         }
 
         feed.reviewed = 1;
-        // Lock the record to be write
-        struct flock lock = {F_WRLCK, SEEK_SET, offset, sizeof(struct Feedback), getpid()};
-        int lockingStatus = fcntl(feedbackFD, F_SETLKW, &lock);
-        if (lockingStatus == -1) {
-            perror("Couldn't obtain lock on feedback record!");
-            return;
-        }
         offset = lseek(feedbackFD, feedback_id * sizeof(struct Feedback), SEEK_SET);
         if (offset == -1) {
             perror("Error while seeking to required feedback record!");
+            return;
+        }
+        // Lock the record to be write
+        lock.l_type = F_WRLCK;
+        lock.l_start = offset;
+        lockingStatus = fcntl(feedbackFD, F_SETLKW, &lock);
+        if (lockingStatus == -1) {
+            perror("Couldn't obtain lock on feedback record!");
             return;
         }
         // writting to customer file
@@ -569,6 +575,7 @@ bool manager_menu(int connFD, int emp_id) {
         }
         bzero(writeBuffer, sizeof(writeBuffer));
 
+        bzero(readBuffer, sizeof(readBuffer));
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));
         if (readBytes == -1) {
             perror("Error while reading client's choice for MANAGER_MENU");

@@ -532,15 +532,12 @@ void transfer_funds(int connFD) {
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1) {
             perror("Error while writing ACCOUNT_ID_DOESNT_EXIT message to client!");
-            // unlock_critical_section(&semOp);
             return;
         }
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
-        // unlock_critical_section(&semOp);
         return;
     } else if (offset == -1) {
         perror("Error while seeking to required account record!");
-        // unlock_critical_section(&semOp);
         return;
     }
     // asking for account no.
@@ -548,17 +545,38 @@ void transfer_funds(int connFD) {
     writeBytes = write(connFD, ACOUNT_TRANSFER, strlen(ACOUNT_TRANSFER));
     if (writeBytes == -1) {
         perror("Error while writing ACOUNT_TRANSFER message to client!");
-        // unlock_critical_section(&semOp);
         return;
     }
     bzero(readBuffer, sizeof(readBuffer));
     readBytes = read(connFD, readBuffer, sizeof(readBuffer));
     if (readBytes == -1) {
         perror("Error while reading message from client!");
-        // unlock_critical_section(&semOp);
         return;
     }
 
+    int custID2 = atoi(readBuffer);
+    custID2 = custID2 - 1000;
+    struct Customer customer2;
+
+    // asking the amount you want to transfer
+    bzero(writeBuffer, sizeof(writeBuffer));
+    writeBytes = write(connFD, AMOUNT_TRANSFER, strlen(AMOUNT_TRANSFER));
+    if (writeBytes == -1) {
+        perror("Error while writing AMOUNT_TRANSFER message to client!");
+        close(customerFileDescriptor);
+        return;
+    }
+
+    bzero(readBuffer, sizeof(readBuffer));
+    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+    if (readBytes == -1) {
+        perror("Error while reading message from client!");
+        close(customerFileDescriptor);
+        return;
+    }
+    int amount_to_transfer = atoi(readBuffer);  // storing amount ot transfer
+
+    // locking
     struct flock lock = {F_WRLCK, SEEK_SET, offset, sizeof(struct Customer), getpid()};
 
     int lockingStatus = fcntl(customerFileDescriptor, F_SETLKW, &lock);
@@ -567,10 +585,6 @@ void transfer_funds(int connFD) {
         // unlock_critical_section(&semOp);
         return;
     }
-
-    int custID2 = atoi(readBuffer);
-    custID2 = custID2 - 1000;
-    struct Customer customer2;
 
     // going to reciever(customer2) data in file
     int offset2 = lseek(customerFileDescriptor, custID2 * sizeof(struct Customer), SEEK_SET);
@@ -583,19 +597,18 @@ void transfer_funds(int connFD) {
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1) {
             perror("Error while writing ACCOUNT_ID_DOESNT_EXIT message to client!");
-            // unlock_critical_section(&semOp);
             lock.l_type = F_UNLCK;
             fcntl(customerFileDescriptor, F_SETLK, &lock);
             return;
         }
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
-        // unlock_critical_section(&semOp);
+
         lock.l_type = F_UNLCK;
         fcntl(customerFileDescriptor, F_SETLK, &lock);
         return;
     } else if (offset == -1) {
         perror("Error while seeking to required account record!");
-        // unlock_critical_section(&semOp);
+
         lock.l_type = F_UNLCK;
         fcntl(customerFileDescriptor, F_SETLK, &lock);
         return;
@@ -606,7 +619,6 @@ void transfer_funds(int connFD) {
     int lockingStatus2 = fcntl(customerFileDescriptor, F_SETLKW, &lock2);
     if (lockingStatus2 == -1) {
         perror("Error obtaining read lock on account record!");
-        // unlock_critical_section(&semOp);
         lock.l_type = F_UNLCK;
         fcntl(customerFileDescriptor, F_SETLK, &lock);
         close(customerFileDescriptor);
@@ -616,7 +628,6 @@ void transfer_funds(int connFD) {
     readBytes = read(customerFileDescriptor, &customer2, sizeof(struct Customer));
     if (readBytes == -1) {
         perror("Error reading customer2 record from file!");
-        // unlock_critical_section(&semOp);
         lock.l_type = F_UNLCK;
         fcntl(customerFileDescriptor, F_SETLK, &lock);
         lock2.l_type = F_UNLCK;
@@ -624,33 +635,7 @@ void transfer_funds(int connFD) {
         close(customerFileDescriptor);
     }
 
-    // asking the amount you want to transfer
-    bzero(writeBuffer, sizeof(writeBuffer));
-    writeBytes = write(connFD, AMOUNT_TRANSFER, strlen(AMOUNT_TRANSFER));
-    if (writeBytes == -1) {
-        perror("Error while writing AMOUNT_TRANSFER message to client!");
-        // unlock_critical_section(&semOp);
-        lock.l_type = F_UNLCK;
-        fcntl(customerFileDescriptor, F_SETLK, &lock);
-        lock2.l_type = F_UNLCK;
-        fcntl(customerFileDescriptor, F_SETLK, &lock2);
-        close(customerFileDescriptor);
-        return;
-    }
-    bzero(readBuffer, sizeof(readBuffer));
-    readBytes = read(connFD, readBuffer, sizeof(readBuffer));
-    if (readBytes == -1) {
-        perror("Error while reading message from client!");
-        // unlock_critical_section(&semOp);
-        lock.l_type = F_UNLCK;
-        fcntl(customerFileDescriptor, F_SETLK, &lock);
-        lock2.l_type = F_UNLCK;
-        fcntl(customerFileDescriptor, F_SETLK, &lock2);
-        close(customerFileDescriptor);
-        return;
-    }
     if (customer.active && customer2.active) {
-        int amount_to_transfer = atoi(readBuffer);
         if (amount_to_transfer != 0 && amount_to_transfer <= customer.balance) {
             // transaction wala part
             int newTransactionID = write_transaction_to_file(customer.id, customer.balance, customer.balance - amount_to_transfer, 2);
@@ -667,7 +652,6 @@ void transfer_funds(int connFD) {
             writeBytes = write(customerFileDescriptor, &customer, sizeof(struct Customer));
             if (writeBytes == -1) {
                 perror("Error storing updated deposit money in account record!");
-                // unlock_critical_section(&semOp);
                 lock.l_type = F_UNLCK;
                 fcntl(customerFileDescriptor, F_SETLK, &lock);
                 lock2.l_type = F_UNLCK;
@@ -680,7 +664,6 @@ void transfer_funds(int connFD) {
             writeBytes = write(customerFileDescriptor, &customer2, sizeof(struct Customer));
             if (writeBytes == -1) {
                 perror("Error storing updated deposit money in account record!");
-                // unlock_critical_section(&semOp);
                 lock.l_type = F_UNLCK;
                 fcntl(customerFileDescriptor, F_SETLK, &lock);
                 lock2.l_type = F_UNLCK;
@@ -853,6 +836,31 @@ void get_transaction_detail(int connFD) {
 void apply_loan(int connFD) {
     ssize_t readBytes, writeBytes;
     char readBuffer[1000], writeBuffer[1000];
+
+    int customerFileFD = open(CUSTOMER_FILE, O_RDONLY);
+    if (customerFileFD == -1) {
+        perror("Error opening employee file in read mode!");
+        return;
+    }
+    off_t offset = lseek(customerFileFD, customer.id * sizeof(struct Customer), SEEK_SET);
+    if (offset >= 0) {
+        struct flock lock = {F_RDLCK, SEEK_SET, customer.id * sizeof(struct Customer), sizeof(struct Customer), getpid()};
+
+        int lockingStatus = fcntl(customerFileFD, F_SETLKW, &lock);
+        if (lockingStatus == -1) {
+            perror("Error obtaining read lock on employee record!");
+            return;
+        }
+
+        readBytes = read(customerFileFD, &customer, sizeof(struct Customer));
+        if (readBytes == -1) {
+            perror("Error reading customer record from file!");
+        }
+
+        lock.l_type = F_UNLCK;
+        fcntl(customerFileFD, F_SETLK, &lock);
+    }
+
     if (customer.loan_status == 0 || customer.loan_status == 4 || customer.loan_status == 3) {
         // customer can apply for loan when he haven't applied or his prev loan was rejected or approved
         struct Loan newloan, prevloan;
@@ -1035,6 +1043,7 @@ bool customer_operation(int connFD) {
             bzero(writeBuffer, sizeof(writeBuffer));
 
             // read choice from client for menu selection
+            bzero(readBuffer, sizeof(readBuffer));
             readBytes = read(connFD, readBuffer, sizeof(readBuffer));
             if (readBytes == -1) {
                 perror("Error while reading client's choice for ADMIN_MENU");
@@ -1042,6 +1051,7 @@ bool customer_operation(int connFD) {
             }
 
             int choice = atoi(readBuffer);
+            // printf("%d\n", choice);
             switch (choice) {
                 case 1:
                     view_balance(connFD);

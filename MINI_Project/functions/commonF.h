@@ -24,7 +24,7 @@ int semIdentifier_c;
 void lock_critical_section(struct sembuf* semOp) {
     semOp->sem_op = -1;
     semOp->sem_num = 0;
-    semOp->sem_flg = 0;
+    semOp->sem_flg = SEM_UNDO;
     int semopStatus = semop(semIdentifier_c, semOp, 1);
     if (semopStatus == -1) {
         perror("Error while locking critical section");
@@ -73,7 +73,7 @@ void show_transaction(int connFD, int trans_id, int customer_id) {
         lock.l_type = F_UNLCK;
         fcntl(transactionFileDescriptor, F_SETLK, &lock);
 
-        char operation[10];
+        char operation[15];
         switch (trans.operation) {
             case 0:
                 strcpy(operation, "Withdraw");
@@ -86,6 +86,9 @@ void show_transaction(int connFD, int trans_id, int customer_id) {
                 break;
             case 3:
                 strcpy(operation, "Credit");
+                break;
+            case 4:
+                strcpy(operation, "LOAN Credit");
                 break;
         }
         if (trans.customer_id == customer_id) {

@@ -19,8 +19,8 @@ void connection_handler(int connFd) {
     printf("Client is connected to the server!\n");
     char rBuffer[1000], wBuffer[1000];
     ssize_t rBytes, wBytes;
-    int ptr = 0;
     while (1) {
+        int ptr = 0;
         wBytes = write(
             connFd,
             "Welcome to bank!\nSelect user\n1. Customer\t2. Bank Employee\t3. "
@@ -42,7 +42,7 @@ void connection_handler(int connFd) {
                 printf("No data was sent by the client");
             else {
                 int choice = atoi(rBuffer);
-                bool flag;
+                bool flag = true;
                 switch (choice) {
                     case 1:
                         // Customer

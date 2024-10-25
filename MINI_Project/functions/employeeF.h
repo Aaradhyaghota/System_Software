@@ -213,12 +213,6 @@ void Eadd_new_customer(int connFD) {
     }
     newCustomer.age = customerAge;
 
-    bzero(newCustomer.login, sizeof(newCustomer.login));
-    strcpy(newCustomer.login, newCustomer.name);
-    strcat(newCustomer.login, "-");
-    sprintf(writeBuffer, "%d", newCustomer.id);
-    strcat(newCustomer.login, writeBuffer);
-
     char hashedPassword[1000];
     strcpy(hashedPassword, crypt(AUTOGEN_PASSWORD, SALT_BAE));
     strcpy(newCustomer.password, hashedPassword);
@@ -257,6 +251,13 @@ void Eadd_new_customer(int connFD) {
 
         newCustomer.id = previousCustomer.id + 1;
     }
+
+    // intializing new login id auto gen login-id
+    bzero(newCustomer.login, sizeof(newCustomer.login));
+    strcpy(newCustomer.login, newCustomer.name);
+    strcat(newCustomer.login, "-");
+    sprintf(writeBuffer, "%d", newCustomer.id);
+    strcat(newCustomer.login, writeBuffer);
 
     customerFileDescriptor = open(CUSTOMER_FILE, O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
     if (customerFileDescriptor == -1) {
@@ -566,6 +567,31 @@ void show_loans(int connFD, int loan_id) {
 }
 
 void view_assigned_loan(int connFD) {
+    ssize_t writeBytes, readBytes;
+    int employeeFileFD = open(EMPLOYEE_FILE, O_RDONLY);
+    if (employeeFileFD == -1) {
+        perror("Error opening employee file in read mode!");
+        return;
+    }
+
+    off_t offset = lseek(employeeFileFD, employee.id * sizeof(struct Employee), SEEK_SET);
+    if (offset >= 0) {
+        struct flock lock = {F_RDLCK, SEEK_SET, employee.id * sizeof(struct Employee), sizeof(struct Employee), getpid()};
+
+        int lockingStatus = fcntl(employeeFileFD, F_SETLKW, &lock);
+        if (lockingStatus == -1) {
+            perror("Error obtaining read lock on employee record!");
+            return;
+        }
+
+        readBytes = read(employeeFileFD, &employee, sizeof(struct Employee));
+        if (readBytes == -1) {
+            perror("Error reading customer record from file!");
+        }
+
+        lock.l_type = F_UNLCK;
+        fcntl(employeeFileFD, F_SETLK, &lock);
+    }
     for (int i = 0; i < MAX_LOANS; i++) {
         if (employee.loan[i] != -1)
             show_loans(connFD, employee.loan[i]);
@@ -699,12 +725,20 @@ void approve_reject_loan(int connFD) {
         perror("Error while reading Customer record from file!");
         return;
     }
+    // changes
     if (respond == 'A' || respond == 'R') {
-        if (respond == 'A')
+        if (respond == 'A') {
             cust.loan_status = 3;  // approved
-        else
+
+            // transaction write
+            int newTransID = write_transaction_to_file(cust.id, cust.balance, cust.balance + loan.amount, 4);
+            write_transaction_to_array(cust.transactions, newTransID);
+
+            cust.balance += loan.amount;  // updating balance
+        } else
             cust.loan_status = 4;  // rejected
     }
+
     // seeking  to customer record in file
     offset = lseek(customerFD, custID * sizeof(struct Customer), SEEK_SET);
     if (offset == -1) {
@@ -820,6 +854,7 @@ bool employee_menu(int connFD) {
         }
         bzero(writeBuffer, sizeof(writeBuffer));
 
+        bzero(readBuffer, sizeof(readBuffer));
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));
         if (readBytes == -1) {
             perror("Error while reading client's choice for EMPLOYEE_MENU");

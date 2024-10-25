@@ -239,14 +239,7 @@ void add_new_employee(int connFD) {
         return;
     }
 
-    // LOGIN _ PASSWORD
-    bzero(newEmployee.login, sizeof(newEmployee.login));
-    strcpy(newEmployee.login, newEmployee.name);
-    strcat(newEmployee.login, "-");
-    sprintf(writeBuffer, "%d", newEmployee.id);
-    strcat(newEmployee.login, writeBuffer);
-
-    char hashedPassword[1000];
+        char hashedPassword[1000];
     strcpy(hashedPassword, crypt(AUTOGEN_PASSWORD, SALT_BAE));
     strcpy(newEmployee.password, hashedPassword);
 
@@ -285,6 +278,13 @@ void add_new_employee(int connFD) {
 
         newEmployee.id = previousEmployee.id + 1;
     }
+
+    // LOGIN _ PASSWORD
+    bzero(newEmployee.login, sizeof(newEmployee.login));
+    strcpy(newEmployee.login, newEmployee.name);
+    strcat(newEmployee.login, "-");
+    sprintf(writeBuffer, "%d", newEmployee.id);
+    strcat(newEmployee.login, writeBuffer);
 
     // WRITTING TO FILE
     employeeFileDescriptor = open(EMPLOYEE_FILE, O_CREAT | O_APPEND | O_WRONLY, S_IRWXU);
